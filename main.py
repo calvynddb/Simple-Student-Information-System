@@ -22,10 +22,25 @@ class App(ctk.CTk):
         # Initialize data files
         init_files()
         
-        # Load data
-        self.colleges = load_csv('college')
-        self.programs = load_csv('program')
-        self.students = load_csv('student')
+        # Load data (guarded)
+        try:
+            self.colleges = load_csv('college')
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            self.colleges = []
+        try:
+            self.programs = load_csv('program')
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            self.programs = []
+        try:
+            self.students = load_csv('student')
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            self.students = []
 
         # Create container
         self.container = ctk.CTkFrame(self)
@@ -58,8 +73,19 @@ def main():
         mtime = "unknown"
     print(f"Starting {os.path.abspath(__file__)} (mtime: {mtime})")
 
-    app = App()
-    app.mainloop()
+    try:
+        app = App()
+        app.mainloop()
+    except Exception as e:
+        import traceback, sys
+        traceback.print_exc()
+        try:
+            # try to show a dialog if tkinter is usable
+            from tkinter import messagebox
+            messagebox.showerror("Application Error", f"Unhandled exception during startup:\n{e}")
+        except Exception:
+            pass
+        sys.exit(1)
 
 
 if __name__ == "__main__":
