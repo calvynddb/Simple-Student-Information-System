@@ -16,7 +16,7 @@ except ImportError:
 
 from config import (
     BG_COLOR, PANEL_COLOR, ACCENT_COLOR, TEXT_MUTED, BORDER_COLOR, 
-    FONT_MAIN, FONT_BOLD, COLOR_PALETTE
+    FONT_MAIN, FONT_BOLD, COLOR_PALETTE, get_font, TEXT_PRIMARY, THEME_MANAGER
 )
 from components import DepthCard, placeholder_image
 from views import StudentsView, ProgramsView, CollegesView
@@ -35,6 +35,15 @@ class DashboardFrame(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         self.create_topbar()
+        try:
+            self.create_topbar()
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            try:
+                messagebox.showerror("Dashboard Init Error", f"Failed to create topbar: {e}")
+            except Exception:
+                pass
 
         # Main container with left content and right sidebar
         main_container = ctk.CTkFrame(self, fg_color="transparent")
@@ -86,14 +95,14 @@ class DashboardFrame(ctk.CTkFrame):
         left_inner.grid_rowconfigure(0, weight=1)
         
         self.title_label = ctk.CTkLabel(left_inner, text="Students", 
-                                       font=("Segoe UI Variable", 20, "bold"), 
-                                       text_color=ACCENT_COLOR)
+                           font=get_font(20, True), 
+                           text_color=ACCENT_COLOR)
         self.title_label.grid(row=0, column=0, sticky="ew")
         
         self.add_btn = ctk.CTkButton(left_inner, text="Add Entry", width=120, height=40,
-                                    font=("Segoe UI Variable", 12, "bold"),
+                        font=get_font(12, True),
                                     fg_color=ACCENT_COLOR, text_color="black",
-                                    hover_color="#1e9aa8", command=self.handle_add_entry)
+                        hover_color="#7C3AED", command=self.handle_add_entry)
         self.add_btn.grid(row=0, column=1, sticky="e", padx=(15, 0))
         
         # CENTER SECTION: Centralized navigation tabs
@@ -115,8 +124,8 @@ class DashboardFrame(ctk.CTkFrame):
             compound="left",
             fg_color="transparent",
             text_color="#d1d1d1",
-            hover_color="#303035",
-            font=("Segoe UI Variable", 13, "bold"),
+            hover_color="#2A1F3D",
+            font=get_font(13, True),
             corner_radius=8,
             height=45,
             command=lambda: self.show_view(StudentsView)
@@ -131,8 +140,8 @@ class DashboardFrame(ctk.CTkFrame):
             compound="left",
             fg_color="transparent",
             text_color="#d1d1d1",
-            hover_color="#303035",
-            font=("Segoe UI Variable", 13, "bold"),
+            hover_color="#2A1F3D",
+            font=get_font(13, True),
             corner_radius=8,
             height=45,
             command=lambda: self.show_view(ProgramsView)
@@ -147,8 +156,8 @@ class DashboardFrame(ctk.CTkFrame):
             compound="left",
             fg_color="transparent",
             text_color="#d1d1d1",
-            hover_color="#303035",
-            font=("Segoe UI Variable", 13, "bold"),
+            hover_color="#2A1F3D",
+            font=get_font(13, True),
             corner_radius=8,
             height=45,
             command=lambda: self.show_view(CollegesView)
@@ -160,8 +169,8 @@ class DashboardFrame(ctk.CTkFrame):
         right_frame.grid(row=0, column=2, sticky="nsew", padx=(15, 0))
         
         self.search_entry = ctk.CTkEntry(right_frame, placeholder_text="Search...", width=220, 
-                        border_width=2, border_color=ACCENT_COLOR, fg_color="#303035", 
-                        corner_radius=20, font=("Segoe UI Variable", 11), height=40)
+                border_width=2, border_color=ACCENT_COLOR, fg_color="#2A1F3D", 
+                corner_radius=20, font=get_font(11), height=40)
         self.search_entry.pack(side="left", padx=5)
         self.search_entry.bind("<KeyRelease>", self.handle_search_dynamic)
         
@@ -171,8 +180,8 @@ class DashboardFrame(ctk.CTkFrame):
                  hover_color="#303035", width=40, height=40, command=self.open_settings).pack(side="left", padx=3)
 
         ctk.CTkButton(right_frame, text="Logout", fg_color="transparent", 
-                 text_color=TEXT_MUTED, hover_color="#303035", font=("Segoe UI Variable", 11, "bold"),
-                 height=40, command=self.handle_logout).pack(side="left", padx=3)
+             text_color=TEXT_MUTED, hover_color="#2A1F3D", font=get_font(11, True),
+             height=40, command=self.handle_logout).pack(side="left", padx=3)
 
     def handle_add_entry(self):
         """Handle add entry button - delegates to current view."""
@@ -236,34 +245,38 @@ class DashboardFrame(ctk.CTkFrame):
         frame = ctk.CTkScrollableFrame(settings_window, fg_color="transparent")
         frame.pack(fill="both", expand=True, padx=25, pady=25)
         
-        ctk.CTkLabel(frame, text="Settings", font=("Segoe UI Variable", 22, "bold")).pack(anchor="w", pady=(0, 25))
+        ctk.CTkLabel(frame, text="Settings", font=get_font(22, True)).pack(anchor="w", pady=(0, 25))
         
         # Appearance
-        ctk.CTkLabel(frame, text="Appearance", font=("Segoe UI Variable", 15, "bold")).pack(anchor="w", pady=(15, 12))
+        ctk.CTkLabel(frame, text="Appearance", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkLabel(frame, text="Theme", font=FONT_BOLD).pack(anchor="w", pady=(5, 4))
-        theme_combo = ctk.CTkOptionMenu(frame, values=["Dark", "Light"], height=40, font=FONT_MAIN)
+        theme_combo = ctk.CTkOptionMenu(frame, values=["Dark", "Light", "System"], height=40, font=FONT_MAIN)
         theme_combo.pack(fill="x", pady=(0, 8))
         # set current appearance
         try:
-            theme_combo.set(ctk.get_appearance_mode())
+            theme_combo.set(ctk.get_appearance_mode().capitalize())
         except Exception:
             pass
         # Apply button to change theme immediately
-        ctk.CTkButton(frame, text="Apply Theme", height=36, command=lambda: ctk.set_appearance_mode(theme_combo.get())).pack(fill="x", pady=(0, 10))
+        def _apply_theme():
+            choice = theme_combo.get()
+            self.apply_theme(choice)
+
+        ctk.CTkButton(frame, text="Apply Theme", height=36, command=_apply_theme).pack(fill="x", pady=(0, 10))
         
         # System
-        ctk.CTkLabel(frame, text="System", font=("Segoe UI Variable", 15, "bold")).pack(anchor="w", pady=(15, 12))
+        ctk.CTkLabel(frame, text="System", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkCheckBox(frame, text="Enable Notifications", height=30, font=FONT_MAIN).pack(anchor="w", pady=6)
         ctk.CTkCheckBox(frame, text="Auto Backup on Exit", height=30, font=FONT_MAIN).pack(anchor="w", pady=6)
         ctk.CTkCheckBox(frame, text="Show Debug Info", height=30, font=FONT_MAIN).pack(anchor="w", pady=6)
         
         # Account
-        ctk.CTkLabel(frame, text="Account", font=("Segoe UI Variable", 15, "bold")).pack(anchor="w", pady=(15, 12))
+        ctk.CTkLabel(frame, text="Account", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkButton(frame, text="Change Password", height=40, font=FONT_MAIN).pack(fill="x", pady=6)
         ctk.CTkButton(frame, text="Manage Admins", height=40, font=FONT_MAIN).pack(fill="x", pady=6)
         
         # Data
-        ctk.CTkLabel(frame, text="Data Management", font=("Segoe UI Variable", 15, "bold")).pack(anchor="w", pady=(15, 12))
+        ctk.CTkLabel(frame, text="Data Management", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkButton(frame, text="Create Backup", height=40, font=FONT_MAIN,
                      command=lambda: messagebox.showinfo("Success", "Backup created successfully!")).pack(fill="x", pady=6)
         ctk.CTkButton(frame, text="View Backups", height=40, font=FONT_MAIN).pack(fill="x", pady=6)
@@ -275,5 +288,26 @@ class DashboardFrame(ctk.CTkFrame):
             create_backups()
             from auth import LoginFrame
             self.controller.show_frame(LoginFrame)
+
+    def apply_theme(self, choice: str):
+        """Apply appearance mode safely and notify all listeners."""
+        try:
+            mode = choice.lower() if isinstance(choice, str) else str(choice).lower()
+            if mode not in ("dark", "light", "system"):
+                mode = "dark"
+            
+            # Set the appearance mode globally
+            ctk.set_appearance_mode(mode)
+            
+            # Notify all listeners of the theme change
+            THEME_MANAGER.notify_theme_change(mode)
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            try:
+                messagebox.showerror("Theme Error", f"Could not apply theme '{choice}': {e}")
+            except Exception:
+                pass
     
 
