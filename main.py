@@ -4,9 +4,9 @@ Main entry point for EduMdge SIS application
 
 import customtkinter as ctk
 from config import BG_COLOR, WINDOW_WIDTH, WINDOW_HEIGHT
-from data import init_files, load_csv
-from auth import LoginFrame
-from dashboard import DashboardFrame
+from backend import init_files, load_csv
+from frontend_ui.auth import LoginFrame
+from frontend_ui.dashboard import DashboardFrame
 import os
 import time
 
@@ -64,32 +64,65 @@ class App(ctk.CTk):
         self.show_frame(DashboardFrame, fade=False)
 
     def show_custom_dialog(self, title, message, dialog_type="info", callback=None):
-        """Show a custom styled dialog matching the app theme."""
-        from config import BG_COLOR, ACCENT_COLOR, TEXT_PRIMARY, TEXT_MUTED
+        """Show a custom styled dialog matching the app theme.
+        
+        dialog_type: 'info', 'error', 'warning', 'yesno'
+        For 'yesno', returns True/False. For others, returns None.
+        """
+        from config import BG_COLOR, ACCENT_COLOR, TEXT_PRIMARY, TEXT_MUTED, PANEL_COLOR, BORDER_COLOR
         from config import get_font
+        
+        result = [None]  # mutable container for yesno result
         
         dialog_window = ctk.CTkToplevel(self)
         dialog_window.title(title)
-        dialog_window.geometry("450x200")
-        dialog_window.attributes('-topmost', True)
+        dialog_window.overrideredirect(False)
         dialog_window.configure(fg_color=BG_COLOR)
+        dialog_window.attributes('-topmost', True)
+        dialog_window.grab_set()
+        dialog_window.focus_force()
+        
+        # Size based on message length
+        msg_len = len(message)
+        height = 200 if msg_len < 100 else 250 if msg_len < 200 else 300
+        dialog_window.geometry(f"450x{height}")
         
         dialog_window.update_idletasks()
-        x = (dialog_window.winfo_screenwidth() // 2) - (dialog_window.winfo_width() // 2)
-        y = (dialog_window.winfo_screenheight() // 2) - (dialog_window.winfo_height() // 2)
+        x = (dialog_window.winfo_screenwidth() // 2) - (225)
+        y = (dialog_window.winfo_screenheight() // 2) - (height // 2)
         dialog_window.geometry(f"+{x}+{y}")
+        
+        # Pick accent color by dialog type
+        if dialog_type == "error":
+            accent = "#c41e3a"
+            icon_text = "ERROR"
+        elif dialog_type == "warning":
+            accent = "#d4a017"
+            icon_text = "WARNING"
+        elif dialog_type == "yesno":
+            accent = ACCENT_COLOR
+            icon_text = "CONFIRM"
+        else:
+            accent = ACCENT_COLOR
+            icon_text = "INFO"
         
         # Content frame
         frame = ctk.CTkFrame(dialog_window, fg_color="transparent")
         frame.pack(fill="both", expand=True, padx=30, pady=30)
         
+        # Type badge
+        badge = ctk.CTkLabel(frame, text=icon_text, font=get_font(9, True),
+                            text_color="white", fg_color=accent, corner_radius=6,
+                            width=70, height=22)
+        badge.pack(pady=(0, 10))
+        
         # Title
         title_label = ctk.CTkLabel(frame, text=title, font=get_font(14, True), text_color=TEXT_PRIMARY)
-        title_label.pack(pady=(0, 15))
+        title_label.pack(pady=(0, 10))
         
         # Message
-        msg_label = ctk.CTkLabel(frame, text=message, font=get_font(11), text_color=TEXT_MUTED, wraplength=350)
-        msg_label.pack(pady=(0, 25), fill="both", expand=True)
+        msg_label = ctk.CTkLabel(frame, text=message, font=get_font(11), text_color=TEXT_MUTED, wraplength=380)
+        msg_label.pack(pady=(0, 20), fill="both", expand=True)
         
         # Buttons
         button_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -97,26 +130,29 @@ class App(ctk.CTk):
         
         if dialog_type == "yesno":
             def _yes():
+                result[0] = True
                 if callback:
                     callback(True)
                 dialog_window.destroy()
             
             def _no():
+                result[0] = False
                 if callback:
                     callback(False)
                 dialog_window.destroy()
             
-            ctk.CTkButton(button_frame, text="Yes", fg_color=ACCENT_COLOR, text_color="white",
-                         hover_color="#7C3AED", font=get_font(11, True), command=_yes).pack(side="left", fill="x", expand=True, padx=(0, 8))
-            ctk.CTkButton(button_frame, text="No", fg_color="#555555", text_color="white",
-                         hover_color="#666666", font=get_font(11, True), command=_no).pack(side="left", fill="x", expand=True, padx=(8, 0))
+            ctk.CTkButton(button_frame, text="Yes", fg_color=accent, text_color="white",
+                         hover_color="#7C3AED", font=get_font(11, True), height=36, command=_yes).pack(side="left", fill="x", expand=True, padx=(0, 8))
+            ctk.CTkButton(button_frame, text="No", fg_color="#3a3a3f", text_color="white",
+                         hover_color="#4a4a4f", font=get_font(11, True), height=36, command=_no).pack(side="left", fill="x", expand=True, padx=(8, 0))
         else:
-            # Info or error dialog with single OK button
-            ctk.CTkButton(button_frame, text="OK", fg_color=ACCENT_COLOR, text_color="white",
-                         hover_color="#7C3AED", font=get_font(11, True), 
+            ctk.CTkButton(button_frame, text="OK", fg_color=accent, text_color="white",
+                         hover_color="#7C3AED", font=get_font(11, True), height=36,
                          command=dialog_window.destroy).pack(fill="x")
         
+        dialog_window.protocol("WM_DELETE_WINDOW", lambda: (result.__setitem__(0, False), dialog_window.destroy()))
         self.wait_window(dialog_window)
+        return result[0]
 
     def show_frame(self, cont, fade=True):
         """Show a specific frame."""
@@ -130,11 +166,17 @@ class App(ctk.CTk):
             # Skip fade animation on launch
             new_frame.lift()
             self.current_frame = new_frame
-            from ui.utils import apply_button_hover
+            from frontend_ui.ui.utils import apply_button_hover
             try:
                 apply_button_hover(new_frame)
             except Exception:
                 pass
+            # Call on_frame_shown callback if it exists
+            if hasattr(new_frame, 'on_frame_shown'):
+                try:
+                    new_frame.on_frame_shown()
+                except Exception:
+                    pass
             return
         
         try:
@@ -152,7 +194,7 @@ class App(ctk.CTk):
                     try:
                         new_frame.lift()
                         self.current_frame = new_frame
-                        from ui.utils import apply_button_hover
+                        from frontend_ui.ui.utils import apply_button_hover
                         try:
                             apply_button_hover(new_frame)
                         except Exception:
@@ -169,17 +211,30 @@ class App(ctk.CTk):
                     pass
                 if i < steps:
                     self.after(15, lambda: fade_in(i+1))
+                else:
+                    # Call on_frame_shown callback if it exists
+                    if hasattr(new_frame, 'on_frame_shown'):
+                        try:
+                            new_frame.on_frame_shown()
+                        except Exception:
+                            pass
 
             fade_out(0)
         except Exception:
             # fallback to instant raise
             new_frame.tkraise()
             try:
-                from ui.utils import apply_button_hover
+                from frontend_ui.ui.utils import apply_button_hover
                 apply_button_hover(new_frame)
             except Exception:
                 pass
             self.current_frame = new_frame
+            # Call on_frame_shown callback if it exists
+            if hasattr(new_frame, 'on_frame_shown'):
+                try:
+                    new_frame.on_frame_shown()
+                except Exception:
+                    pass
 
 
 def _lerp(a, b, t):
