@@ -25,7 +25,7 @@ class StatCard(DepthCard):
         self.pack(fill="x", pady=(0, 12))
         self.pack_propagate(False)
 
-        # Center all content using a single inner frame
+        # center all content using a single inner frame
         inner = ctk.CTkFrame(self, fg_color="transparent")
         inner.place(relx=0.5, rely=0.5, anchor="center")
 

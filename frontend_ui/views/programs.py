@@ -5,13 +5,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
 
-try:
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
+# matplotlib & numpy are lazy-loaded inside create_donut_chart() to speed up startup
 
 from config import (
     FONT_MAIN, FONT_BOLD, BG_COLOR, PANEL_COLOR, ACCENT_COLOR, 
@@ -31,7 +25,7 @@ class ProgramsView(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=0)
         self.sort_column = None
         self.sort_reverse = False
-        self.column_names = {}  # Store original column names
+        self.column_names = {}  # store original column names
         self.setup_ui()
 
     def setup_ui(self):
@@ -42,7 +36,7 @@ class ProgramsView(ctk.CTkFrame):
         cols = ("#", "Code", "Program Name", "College", "Students")
         self.tree = ttk.Treeview(table_container, columns=cols, show="headings", style="Treeview", height=12)
         
-        # Store original column names and add sort hint
+        # store original column names and add sort hint
         for c in cols:
             self.column_names[c] = c.upper()
             self.tree.heading(c, text=c.upper() + " ⇅")
@@ -57,7 +51,7 @@ class ProgramsView(ctk.CTkFrame):
         self.tree.tag_configure('even', background="#0f0d12")
         self.tree.tag_configure('hover', background="#6d5a8a", foreground="#ffffff")
 
-        # Pagination controls - integrated layout
+        # pagination controls - integrated layout
         ctrl = ctk.CTkFrame(table_container, fg_color="transparent")
         ctrl.pack(fill="x", padx=10, pady=(10,12))
         self.current_page = 1
@@ -66,7 +60,7 @@ class ProgramsView(ctk.CTkFrame):
         self._last_hover = None
         self.table_container = table_container
         
-        # Left section: Previous button, pagination, and Next button together
+        # left section: Previous button, pagination, and Next button together
         left_ctrl = ctk.CTkFrame(ctrl, fg_color="transparent")
         left_ctrl.pack(side="left")
         
@@ -77,11 +71,11 @@ class ProgramsView(ctk.CTkFrame):
         self.pagination_frame.pack(side="left", padx=8)
         self.page_buttons = []
         
-        # Next Button - right next to pagination
+        # next Button - right next to pagination
         self.next_btn = ctk.CTkButton(left_ctrl, text="Next ▶", width=80, fg_color="#6d28d9", hover_color="#5b21b6", text_color="white", command=lambda: self.change_page(1))
         self.next_btn.pack(side="left", padx=(8,0))
         
-        # Go to page section
+        # go to page section
         goto_frame = ctk.CTkFrame(left_ctrl, fg_color="transparent")
         goto_frame.pack(side="left", padx=(15, 0))
         
@@ -99,18 +93,18 @@ class ProgramsView(ctk.CTkFrame):
                                     command=self.go_to_page)
         self.go_btn.pack(side="left")
         
-        # Right section: Entry count only
+        # right section: Entry count only
         right_ctrl = ctk.CTkFrame(ctrl, fg_color="transparent")
         right_ctrl.pack(side="right")
         
-        # Entry count label
+        # entry count label
         self.entry_count_label = ctk.CTkLabel(right_ctrl, text="Showing 0 of 0 entries", 
                                              font=get_font(11), text_color=TEXT_MUTED)
         self.entry_count_label.pack(side="left", padx=0)
 
         def _on_table_config(e):
             total = max(e.width - 20, 200)
-            # Adjust column proportions to fit better
+            # adjust column proportions to fit better
             props = [0.08, 0.15, 0.50, 0.15, 0.12]
             for i, col in enumerate(cols):
                 self.tree.column(col, width=max(int(total * props[i]), 50))
@@ -171,7 +165,10 @@ class ProgramsView(ctk.CTkFrame):
             pass
 
     def create_donut_chart(self, parent):
-        if not MATPLOTLIB_AVAILABLE:
+        try:
+            import matplotlib.pyplot as plt
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        except ImportError:
             ctk.CTkLabel(parent, text="Matplotlib required", text_color=TEXT_MUTED).pack(pady=40)
             return
         
@@ -181,12 +178,12 @@ class ProgramsView(ctk.CTkFrame):
         color_map = {
             'CCS': '#87CEEB',
             'COE': '#800000',
-            'CSM': '#FF0000',
+            'CSM': '#fF0000',
             'CED': '#00008B',
             'CASS': '#008000',
             'Cass': '#008000',
-            'CEBA': '#FFD700',
-            'CHS': '#FFFFFF',
+            'CEBA': '#fFD700',
+            'CHS': '#fFFFFF',
         }
 
         college_counts = {}
@@ -203,6 +200,7 @@ class ProgramsView(ctk.CTkFrame):
                                    wedgeprops=dict(width=0.4, edgecolor=PANEL_COLOR, linewidth=2))
             ax.axis('equal')
 
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
             canvas = FigureCanvasTkAgg(fig, master=parent)
             canvas.draw()
             canvas.get_tk_widget().pack(pady=(6, 2))
@@ -242,7 +240,7 @@ class ProgramsView(ctk.CTkFrame):
             tag = 'even' if idx % 2 == 0 else 'odd'
             self.tree.insert("", "end", values=row, tags=(tag,))
         
-        # Update entry count - show range (e.g., "Showing 1-12 of 100 entries")
+        # update entry count - show range (e.g., "Showing 1-12 of 100 entries")
         if total > 0:
             display_text = f"Showing {start + 1}-{end} of {total} entries"
         else:
@@ -294,21 +292,21 @@ class ProgramsView(ctk.CTkFrame):
                 self._render_page()
                 self.page_entry.delete(0, "end")
         except ValueError:
-            # Invalid input, just clear the entry
+            # invalid input, just clear the entry
             self.page_entry.delete(0, "end")
 
     def _on_table_configure(self, event):
-        # Get actual available height including padding around table
+        # get actual available height including padding around table
         available_height = self.table_container.winfo_height()
-        if available_height < 100:  # Skip if window is too small
+        if available_height < 100:  # skip if window is too small
             return
-        # Account for: Treeview header (~20px) + padding (~12px) + pagination controls (~55px)
+        # account for: Treeview header (~20px) + padding (~12px) + pagination controls (~55px)
         reserved_height = 20 + 12 + 55
         usable_height = max(available_height - reserved_height, 50)
-        row_height = 48  # Height of each row
-        new_page_size = max(8, usable_height // row_height)  # Show at least 8 rows
+        row_height = 48  # height of each row
+        new_page_size = max(8, usable_height // row_height)  # show at least 8 rows
         
-        # Update treeview height to match page size
+        # update treeview height to match page size
         self.tree.configure(height=new_page_size)
         
         if new_page_size != self.page_size:
@@ -351,10 +349,10 @@ class ProgramsView(ctk.CTkFrame):
 
     def _on_tree_motion(self, event):
         region = self.tree.identify_region(event.x, event.y)
-        # Change cursor to hand when hovering over sortable headings
+        # change cursor to hand when hovering over sortable headings
         if region == "heading":
             self.tree.configure(cursor="hand2")
-            # Clear any row hover
+            # clear any row hover
             if getattr(self, '_last_hover', None):
                 prev_row = self._last_hover
                 if prev_row in self.tree.get_children():
@@ -375,10 +373,10 @@ class ProgramsView(ctk.CTkFrame):
             return
         if getattr(self, '_last_hover', None):
             prev_row = self._last_hover
-            # Check if the previous row still exists
+            # check if the previous row still exists
             if prev_row in self.tree.get_children():
                 self.tree.item(prev_row, tags=())
-        # Set hover tag as the only tag for this row
+        # set hover tag as the only tag for this row
         self.tree.item(row, tags=('hover',))
         self._last_hover = row
 
@@ -386,9 +384,9 @@ class ProgramsView(ctk.CTkFrame):
         self.tree.configure(cursor="")
         if getattr(self, '_last_hover', None):
             prev_row = self._last_hover
-            # Check if the row still exists
+            # check if the row still exists
             if prev_row in self.tree.get_children():
-                # Restore the striping tag
+                # restore the striping tag
                 items = self.tree.get_children()
                 if prev_row in items:
                     idx = items.index(prev_row)
@@ -402,7 +400,7 @@ class ProgramsView(ctk.CTkFrame):
             item = self.tree.identify_row(event.y)
             if item:
                 row_data = self.tree.item(item)['values']
-                prog_code = row_data[1]  # Program code
+                prog_code = row_data[1]  # program code
                 self._show_program_info(prog_code)
 
     def filter_table(self, query):
@@ -427,7 +425,7 @@ class ProgramsView(ctk.CTkFrame):
             except Exception:
                 col_id = self.tree.heading(col, "text")
             
-            # Restore sort hint on previous sort column
+            # restore sort hint on previous sort column
             if self.sort_column and self.sort_column != col_id:
                 self.tree.heading(self.sort_column, text=self.column_names.get(self.sort_column, self.sort_column) + " ⇅")
             
@@ -445,7 +443,7 @@ class ProgramsView(ctk.CTkFrame):
         if not self.sort_column:
             return
         
-        # Get the original column name
+        # get the original column name
         col_name = self.column_names.get(self.sort_column, self.sort_column)
         arrow = " ▼" if self.sort_reverse else " ▲"
         self.tree.heading(self.sort_column, text=col_name + arrow)
@@ -454,11 +452,11 @@ class ProgramsView(ctk.CTkFrame):
         if not self.sort_column:
             return
         
-        # Sort the entire _last_page_items list
+        # sort the entire _last_page_items list
         col_index = self.tree['columns'].index(self.sort_column) if self.sort_column in self.tree['columns'] else 0
         self._last_page_items.sort(key=lambda x: self.try_numeric(str(x[col_index])), reverse=self.sort_reverse)
         
-        # Re-render the current page
+        # re-render the current page
         self._render_page()
     
     @staticmethod
@@ -491,7 +489,7 @@ class ProgramsView(ctk.CTkFrame):
         container = ctk.CTkFrame(profile_window, fg_color="transparent")
         container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Header with code and name
+        # header with code and name
         header = DepthCard(container, fg_color=PANEL_COLOR, corner_radius=12, border_width=2, border_color=BORDER_COLOR)
         header.pack(fill="x", pady=(0, 15))
 
@@ -508,14 +506,14 @@ class ProgramsView(ctk.CTkFrame):
         ctk.CTkLabel(text_frame, text=program.get('name', 'N/A'), font=get_font(16, True), wraplength=550, justify="left", anchor="w").pack(fill="x", anchor="w")
         ctk.CTkLabel(text_frame, text=f"Code: {program.get('code', '')}", text_color=TEXT_MUTED, font=get_font(11), anchor="w").pack(fill="x", anchor="w", pady=(4, 0))
 
-        # Info card with scrollable content
+        # info card with scrollable content
         info_card = DepthCard(container, fg_color=PANEL_COLOR, corner_radius=12, border_width=2, border_color=BORDER_COLOR)
         info_card.pack(fill="both", expand=True, pady=(0, 15))
 
         info_scroll = ctk.CTkScrollableFrame(info_card, fg_color="transparent")
         info_scroll.pack(fill="both", expand=True, padx=15, pady=15)
 
-        # Information grid
+        # information grid
         def add_info_row(label, value):
             row = ctk.CTkFrame(info_scroll, fg_color="transparent")
             row.pack(fill="x", pady=8)
@@ -531,13 +529,13 @@ class ProgramsView(ctk.CTkFrame):
         student_count = len([s for s in self.controller.students if s.get('program') == prog_code])
         add_info_row("Enrolled Students:", str(student_count))
 
-        # Action buttons - only show if authenticated
+        # action buttons - only show if authenticated
         btn_frame = ctk.CTkFrame(container, fg_color="transparent")
         btn_frame.pack(fill="x")
 
         def _edit():
             profile_window.destroy()
-            # Trigger the edit dialog by simulating a row selection
+            # trigger the edit dialog by simulating a row selection
             selection = self.tree.selection()
             if not selection:
                 self.on_row_select(None)
@@ -561,17 +559,17 @@ class ProgramsView(ctk.CTkFrame):
                 self.refresh_table()
                 self.controller.show_custom_dialog("Success", "Program deleted successfully!")
 
-        # Only show edit/delete buttons if user is logged in
+        # only show edit/delete buttons if user is logged in
         if self.controller.logged_in:
             ctk.CTkButton(btn_frame, text="Edit", command=_edit, fg_color=ACCENT_COLOR, text_color="white", font=FONT_BOLD, height=40).pack(side="left", fill="x", expand=True, padx=(0, 5))
             ctk.CTkButton(btn_frame, text="Delete", command=_delete, fg_color="#c41e3a", text_color="white", font=FONT_BOLD, height=40).pack(side="left", fill="x", expand=True, padx=(5, 0))
         else:
-            # Show message prompting login
+            # show message prompting login
             login_msg = ctk.CTkLabel(btn_frame, text="🔒 Log in to edit or delete", font=get_font(11), text_color=TEXT_MUTED)
             login_msg.pack(fill="x", pady=10)
 
     def add_program(self):
-        # Check authentication
+        # check authentication
         if not self.controller.logged_in:
             self.controller.show_custom_dialog("Access Denied", "You must log in to add programs.")
             return
@@ -674,7 +672,7 @@ class ProgramsView(ctk.CTkFrame):
             modal.destroy()
             self.controller.show_custom_dialog("Success", "Program added successfully!")
         
-        # Save / Cancel row
+        # save / Cancel row
         btn_row = ctk.CTkFrame(form_frame, fg_color="transparent")
         btn_row.pack(fill="x", pady=(8,0))
         ctk.CTkButton(btn_row, text="Save Program", command=save, height=40,
@@ -702,7 +700,7 @@ class ProgramsView(ctk.CTkFrame):
             menu.grab_release()
     
     def delete_program(self):
-        # Check authentication
+        # check authentication
         if not self.controller.logged_in:
             self.controller.show_custom_dialog("Access Denied", "You must log in to delete programs.")
             return
@@ -720,10 +718,10 @@ class ProgramsView(ctk.CTkFrame):
             self.controller.show_custom_dialog("Error", "Program not found", dialog_type="error")
             return
         
-        # Count affected students
+        # count affected students
         affected_students = [s for s in self.controller.students if s.get('program', '') == prog_code]
         
-        # Build warning message
+        # build warning message
         warning_parts = [f"Are you sure you want to delete program '{prog_code}'?"]
         if affected_students:
             warning_parts.append(f"\n\n⚠ This will orphan {len(affected_students)} student(s) currently enrolled in this program.")
@@ -770,14 +768,14 @@ class ProgramsView(ctk.CTkFrame):
         container = ctk.CTkFrame(edit_window, fg_color="transparent")
         container.pack(fill="both", expand=True, padx=16, pady=16)
         
-        # Header card
+        # header card
         header = DepthCard(container, fg_color=PANEL_COLOR, corner_radius=12, border_width=2, border_color=BORDER_COLOR, height=80)
         header.pack(fill="x", pady=(0, 12))
         header.pack_propagate(False)
         ctk.CTkLabel(header, text=f"{prog_code}", font=get_font(16, True)).place(x=16, y=14)
         ctk.CTkLabel(header, text="Program", font=get_font(11), text_color=TEXT_MUTED).place(x=16, y=44)
         
-        # Form card
+        # form card
         form_card = DepthCard(container, fg_color=PANEL_COLOR, corner_radius=12, border_width=2, border_color=BORDER_COLOR)
         form_card.pack(fill="both", expand=True)
         form_frame = ctk.CTkScrollableFrame(form_card, fg_color="transparent")
@@ -877,7 +875,7 @@ class ProgramsView(ctk.CTkFrame):
                 reader = csv.DictReader(f)
                 existing_codes = set()
                 
-                # Load existing codes
+                # load existing codes
                 try:
                     import csv as csv_module
                     with open(FILES['program'], 'r', encoding='utf-8') as existing:
@@ -889,7 +887,7 @@ class ProgramsView(ctk.CTkFrame):
                 
                 rows_to_add = []
                 for row_num, row in enumerate(reader, start=2):
-                    # Validate the row
+                    # validate the row
                     is_valid, error_msg = validate_program({
                         'code': row.get('code', ''),
                         'name': row.get('name', ''),
@@ -901,7 +899,7 @@ class ProgramsView(ctk.CTkFrame):
                         errors.append(f"Row {row_num}: {error_msg}")
                         continue
                     
-                    # Check if code already exists
+                    # check if code already exists
                     if row.get('code') in existing_codes:
                         error_count += 1
                         errors.append(f"Row {row_num}: Program code {row.get('code')} already exists")
@@ -911,7 +909,7 @@ class ProgramsView(ctk.CTkFrame):
                     existing_codes.add(row.get('code'))
                     imported_count += 1
                 
-                # Append to CSV file
+                # append to CSV file
                 if rows_to_add:
                     with open(FILES['program'], 'a', newline='', encoding='utf-8') as f:
                         writer = csv.DictWriter(f, fieldnames=['code', 'name', 'college'])
@@ -924,7 +922,7 @@ class ProgramsView(ctk.CTkFrame):
                     
                     self.refresh_table()
             
-            # Show results
+            # show results
             if error_count == 0:
                 self.controller.show_custom_dialog("Import Success", f"Successfully imported {imported_count} programs!")
             else:

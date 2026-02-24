@@ -16,26 +16,26 @@ class SearchableComboBox(ctk.CTkFrame):
         self.selected_value = None
         self.dropdown = None
         
-        # Main frame with entry and button
+        # main frame with entry and button
         main_frame = ctk.CTkFrame(self, fg_color="transparent")
         main_frame.pack(fill="x")
         main_frame.grid_columnconfigure(0, weight=1)
         main_frame.grid_columnconfigure(1, weight=0)
         
-        # Text entry
+        # text entry
         self.entry = ctk.CTkEntry(main_frame, placeholder_text=kwargs.get("placeholder", "Select..."), 
                                    height=kwargs.get("height", 40), fg_color="#2A1F3D",
                                    border_width=1, border_color=BORDER_COLOR)
         self.entry.grid(row=0, column=0, sticky="ew", padx=(0, 4))
         
-        # Dropdown button with arrow
+        # dropdown button with arrow
         self.dropdown_btn = ctk.CTkButton(main_frame, text="▼", width=40, height=kwargs.get("height", 40),
                                          fg_color="#2A1F3D", text_color=TEXT_PRIMARY,
                                          border_width=1, border_color=BORDER_COLOR,
                                          command=self._toggle_dropdown)
         self.dropdown_btn.grid(row=0, column=1, sticky="e")
         
-        # Bind events
+        # bind events
         self.entry.bind("<KeyRelease>", self._on_type)
         self.entry.bind("<FocusIn>", self._on_focus)
         self.entry.bind("<FocusOut>", lambda e: self.after(200, self._close_dropdown))
@@ -94,11 +94,11 @@ class SearchableComboBox(ctk.CTkFrame):
                                           border_width=1, border_color=ACCENT_COLOR, corner_radius=6)
             self.list_frame.pack(fill="both", expand=True)
         
-        # Clear previous items
+        # clear previous items
         for widget in self.list_frame.winfo_children():
             widget.destroy()
         
-        # Position dropdown below entry
+        # position dropdown below entry
         x = self.entry.winfo_rootx()
         y = self.entry.winfo_rooty() + self.entry.winfo_height() + 2
         width = self.entry.winfo_width() + self.dropdown_btn.winfo_width() + 4
@@ -106,7 +106,7 @@ class SearchableComboBox(ctk.CTkFrame):
         display_count = min(len(matches), 5)
         self.dropdown.geometry(f"{width}x{display_count * 35 + 10}+{x}+{y}")
         
-        # Add option buttons
+        # add option buttons
         for opt in matches:
             btn = ctk.CTkButton(self.list_frame, text=opt, anchor="w",
                                fg_color="transparent", text_color=TEXT_PRIMARY,
@@ -151,19 +151,19 @@ class StyledComboBox(ctk.CTkFrame):
         self.values = values
         self._value = None
         
-        # Main frame with entry and button
+        # main frame with entry and button
         main_frame = ctk.CTkFrame(self, fg_color="transparent")
         main_frame.pack(fill="x")
         main_frame.grid_columnconfigure(0, weight=1)
         main_frame.grid_columnconfigure(1, weight=0)
         
-        # Display label
+        # display label
         self.entry = ctk.CTkEntry(main_frame, placeholder_text=kwargs.get("placeholder", "Select..."), 
                                    height=kwargs.get("height", 40), fg_color="#2A1F3D",
                                    border_width=1, border_color=BORDER_COLOR)
         self.entry.grid(row=0, column=0, sticky="ew", padx=(0, 4))
         
-        # Dropdown button with arrow
+        # dropdown button with arrow
         self.dropdown_btn = ctk.CTkButton(main_frame, text="▼", width=40, height=kwargs.get("height", 40),
                                          fg_color="#2A1F3D", text_color=TEXT_PRIMARY,
                                          border_width=1, border_color=BORDER_COLOR,
@@ -188,7 +188,7 @@ class StyledComboBox(ctk.CTkFrame):
                                  border_width=1, border_color=ACCENT_COLOR, corner_radius=6)
         list_frame.pack(fill="both", expand=True)
         
-        # Position dropdown below button
+        # position dropdown below button
         x = self.entry.winfo_rootx()
         y = self.entry.winfo_rooty() + self.entry.winfo_height() + 2
         width = self.entry.winfo_width() + self.dropdown_btn.winfo_width() + 4
@@ -196,7 +196,7 @@ class StyledComboBox(ctk.CTkFrame):
         display_count = min(len(self.values), 5)
         self.dropdown.geometry(f"{width}x{display_count * 35 + 10}+{x}+{y}")
         
-        # Add option buttons
+        # add option buttons
         for val in self.values:
             btn = ctk.CTkButton(list_frame, text=val, anchor="w",
                                fg_color="transparent", text_color=TEXT_PRIMARY,

@@ -1,9 +1,4 @@
 """
 Views module - entity-specific views for Students, Programs, Colleges.
+View classes are imported directly from their submodules to keep startup fast.
 """
-
-from .students import StudentsView
-from .programs import ProgramsView
-from .colleges import CollegesView
-
-__all__ = ["StudentsView", "ProgramsView", "CollegesView"]

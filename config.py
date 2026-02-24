@@ -6,7 +6,7 @@ import customtkinter as ctk
 import sys
 import os
 
-# --- Path Helpers for PyInstaller bundling ---
+# --- path helpers for pyinstaller bundling ---
 def resource_path(relative_path):
     """Get absolute path to a bundled read-only resource (assets, icons, etc.).
     Works both in development and in a PyInstaller --onefile bundle.
@@ -29,12 +29,12 @@ def data_path(relative_path):
         base = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base, relative_path)
 
-# --- Theme Setup ---
+# --- theme setup ---
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")  # Using dark-blue theme, but will override blue colors in code
+ctk.set_default_color_theme("dark-blue")  # using dark-blue theme, but will override blue colors in code
 
-# --- Fonts ---
-# Century Gothic - clean, modern font for professional look
+# --- fonts ---
+# century gothic - clean, modern font for professional look
 FONT_MAIN = ("Century Gothic", 13)
 FONT_BOLD = ("Century Gothic", 13, "bold")
 FONT_FAMILY = "Century Gothic"
@@ -43,16 +43,16 @@ def get_font(size: int = 13, bold: bool = False):
     """Return a font tuple for widgets: (family, size[, 'bold'])."""
     return (FONT_FAMILY, size, "bold") if bold else (FONT_FAMILY, size)
 
-# --- Colors --- Subtle Dark Purple Theme with Purple Accents
-BG_COLOR = "#0d0d12"  # Very dark background (nearly black)
-PANEL_COLOR = "#1a1620"  # Dark card background (subtle warm undertone)
-ACCENT_COLOR = "#5a4a7a"  # Subtle muted purple (primary accent)
-TEXT_MUTED = "#8a8a95"  # Muted gray-blue (darker for readability)
-TEXT_PRIMARY = "#e8e8f0"  # Soft off-white for main text
-BORDER_COLOR = "#2a1f35"  # Subtle purple border for definition
-PANEL_SELECTED = "#2d1f45"  # Subtle purple selection highlight
+# --- colors --- subtle dark purple theme with purple accents
+BG_COLOR = "#0d0d12"  # very dark background (nearly black)
+PANEL_COLOR = "#1a1620"  # dark card background (subtle warm undertone)
+ACCENT_COLOR = "#5a4a7a"  # subtle muted purple (primary accent)
+TEXT_MUTED = "#8a8a95"  # muted gray-blue (darker for readability)
+TEXT_PRIMARY = "#e8e8f0"  # soft off-white for main text
+BORDER_COLOR = "#2a1f35"  # subtle purple border for definition
+PANEL_SELECTED = "#2d1f45"  # subtle purple selection highlight
 
-# --- CSV Files and Fields ---
+# --- csv files and fields ---
 FILES = {
     'college': data_path('colleges.csv'),
     'program': data_path('programs.csv'),
@@ -65,20 +65,20 @@ FIELDS = {
     'student': ['id', 'firstname', 'lastname', 'program', 'year', 'gender'],
 }
 
-# --- Window Dimensions ---
+# --- window dimensions ---
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 900
 
-# --- Chart Colors --- Subtle Purple Palette
+# --- chart colors --- subtle purple palette
 COLOR_PALETTE = [
-    '#5a4a7a',  # Subtle muted purple (primary)
-    '#6d5a8a',  # Muted purple-gray
-    '#7a6a95',  # Medium muted purple
-    '#4a3a65',  # Deep subtle purple
-    '#3a2a50',  # Very deep purple
-    '#5a7a8a',  # Muted blue-gray
-    '#6a7a8a',  # Muted slate
-    '#5a8a7a'   # Muted teal (subtle cool tone)
+    '#5a4a7a',  # subtle muted purple (primary)
+    '#6d5a8a',  # muted purple-gray
+    '#7a6a95',  # medium muted purple
+    '#4a3a65',  # deep subtle purple
+    '#3a2a50',  # very deep purple
+    '#5a7a8a',  # muted blue-gray
+    '#6a7a8a',  # muted slate
+    '#5a8a7a'   # muted teal (subtle cool tone)
 ]
 
 # --- Global Theme Manager ---
@@ -115,5 +115,5 @@ class ThemeManager:
         return cls._current_mode
 
 
-# Global theme manager instance
+# global theme manager instance
 THEME_MANAGER = ThemeManager()

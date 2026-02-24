@@ -1,16 +1,23 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = [('assets', 'assets'), ('config.py', '.'), ('students.csv', '.'), ('programs.csv', '.'), ('colleges.csv', '.'), ('users.csv', '.'), ('backend', 'backend'), ('frontend_ui', 'frontend_ui')]
+binaries = []
+hiddenimports = ['PIL', 'PIL._tkinter_finder', 'matplotlib', 'matplotlib.backends.backend_tkagg', 'numpy', 'customtkinter']
+tmp_ret = collect_all('customtkinter')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=[('assets', 'assets'), ('config.py', '.'), ('students.csv', '.'), ('programs.csv', '.'), ('colleges.csv', '.'), ('users.csv', '.')],
-    hiddenimports=['PIL', 'PIL._tkinter_finder', 'matplotlib', 'matplotlib.backends.backend_tkagg', 'numpy', 'customtkinter'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'scipy', 'pandas', 'pytest', 'setuptools', 'unittest'],
     noarchive=False,
     optimize=0,
 )
