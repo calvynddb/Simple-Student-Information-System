@@ -20,8 +20,6 @@
 
 ## Screenshots
 
-> Add your own screenshots to a `screenshots/` folder and update the paths below.
-
 | Login | Dashboard | Student Profile |
 |:---:|:---:|:---:|
 | ![Login](screenshots/login.png) | ![Dashboard](screenshots/dashboard.png) | ![Profile](screenshots/profile.png) |
@@ -34,7 +32,7 @@
 
 ## Table of Contents
 
-- [Features](#features)
+- [Overview](#overview)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Default Credentials](#default-credentials)
@@ -42,57 +40,24 @@
 - [Architecture](#architecture)
 - [Data Model](#data-model)
 - [Building the Executable](#building-the-executable)
-- [Notes](#notes)
 
 ---
 
-## Features
+## Overview
 
-### CRUD Operations
-- Full **Create, Read, Update, Delete** for Students, Programs, and Colleges.
-- Add/Edit forms open as themed modal popups with field validation.
-- Delete operations require confirmation via a custom Yes/No dialog.
+nexo is a desktop student information system built with Python and CustomTkinter. It manages students, academic programs, and colleges through a dark-themed GUI backed by CSV flat files — no database required.
 
-### Search
-- **Real-time search** from the title bar — filters the active table as you type.
-- Cross-field searching (e.g. searching a student matches ID, name, program, college, etc.).
+**Core features:**
 
-### Sorting
-- **Click any column header** to sort ascending/descending.
-- Visual indicators: **▲** ascending, **▼** descending, **⇅** unsorted.
-- Cursor changes to a hand pointer over sortable headings.
-- Numeric-aware sorting for the Year column.
-
-### Charts & Visualization
-- **Donut chart** (matplotlib) showing program distribution by college.
-- **Top Enrolled Programs** sidebar with progress bars.
-
-### Authentication & Guest Mode
-- Admin login with SHA-256 hashed passwords stored in CSV.
-- **Guest mode** allows read-only browsing — Add/Edit/Delete/Import are disabled.
-- Register new administrators from the login screen.
-- Logout triggers an automatic data backup.
-
-### CSV Import
-- Import Students, Programs, or Colleges from external CSV files.
-- Per-row validation with error reporting on completion.
-- Duplicate detection during import.
-
-### Pagination
-- Paginated tables with Prev/Next and numbered page buttons.
-- **Go-to-page** input for direct navigation.
-- Dynamic page sizing based on window height (minimum 8 rows).
-
-### Student Profile
-- Click a table row to open a detailed profile popup.
-- Displays full info (name, ID, gender, year, program, college) with Edit/Delete actions.
-
-### UI Polish
-- **Dark purple theme** — near-black background with muted purple accents.
-- **Century Gothic** font throughout.
-- Themed custom dialogs (info, error, warning, yes/no) instead of system message boxes.
-- Row hover highlighting, frame transition animations, icon caching.
-- Settings window with appearance, account, and data management options.
+- **CRUD** — create, read, update, and delete students, programs, and colleges. Forms open as themed modal popups with field validation; deletes require confirmation.
+- **Real-time search** — filters the active table as you type, matching across all visible fields.
+- **Sortable columns** — click any header to toggle ascending/descending order, with a numeric-aware sort for the year column.
+- **Pagination** — prev/next and numbered page buttons with a go-to-page input; page size adjusts dynamically to the window height.
+- **Student profiles** — click any row to open a detail popup with full info and quick edit/delete actions.
+- **Charts** — donut chart (matplotlib) showing program distribution by college, plus a top enrolled programs sidebar.
+- **Auth & guest mode** — admin login with SHA-256 hashed passwords. Guest mode grants full read-only access without logging in. New admins can be registered from the login screen.
+- **CSV import** — bulk-import records from external CSV files with per-row validation, error reporting, and duplicate detection.
+- **Portable executable** — packages into a single `.exe` via PyInstaller; CSV data files are seeded on first launch.
 
 ---
 
@@ -113,26 +78,34 @@
 
 ### Prerequisites
 
-- Python **3.13** or later (3.14 has known NumPy compatibility issues with PyInstaller)
+- Python **3.13** or later
+- pip
+
+> Python 3.14 has a known NumPy DLL incompatibility with PyInstaller — use 3.13 if you plan to build an executable.
 
 ### Installation
 
 ```bash
-# Clone the repository
+# clone the repository
 git clone https://github.com/calvynddb/Simple-Student-Information-System.git
 cd Simple-Student-Information-System
 
-# Install dependencies
+# (recommended) create and activate a virtual environment
+python -m venv .venv
+.venv\Scripts\activate  # windows
+# source .venv/bin/activate  # mac/linux
+
+# install dependencies
 pip install -r requirements.txt
 ```
 
-### Running
+### Run
 
 ```bash
 python main.py
 ```
 
-The app opens at **1400 × 900** in dark mode by default.
+The app opens at **1400 × 900** in dark mode. CSV data files are created automatically on first launch.
 
 ---
 
@@ -289,17 +262,6 @@ python -m PyInstaller --noconfirm --onefile --windowed ^
 ```
 
 The output `dist/nexo.exe` (~38 MB) is fully portable. On first run it seeds CSV data files next to itself.
-
----
-
-## Notes
-
-- **Python 3.14** has a known NumPy DLL incompatibility with PyInstaller. Use **Python 3.13** for building.
-- **PyQt5** must be excluded (`--exclude-module PyQt5`) to prevent conflicts with the TkAgg matplotlib backend.
-- The app uses **CSV flat files** for simplicity — no database setup required. Data files are created automatically on first launch.
-- **Guest mode** provides full read-only access; authentication is only needed for write operations (add, edit, delete, import).
-- The 7 colleges and 59 programs are pre-seeded from bundled CSV files.
-- All icons are bundled as multi-size PNGs (18/22/28/36 px) with automatic fallback to colored squares if an icon file is missing.
 
 ---
 
