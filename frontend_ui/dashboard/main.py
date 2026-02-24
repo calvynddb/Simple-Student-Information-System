@@ -6,15 +6,14 @@ import customtkinter as ctk
 import tkinter as tk
 
 
-# Optional plotting libraries removed from top-level to avoid extra dependency
-# They are imported on-demand in views that need them.
+# optional plotting libraries removed from top-level to avoid extra dependency
+# they are imported on-demand in views that need them.
 
 from config import (
     BG_COLOR, PANEL_COLOR, ACCENT_COLOR, TEXT_MUTED, BORDER_COLOR, 
     FONT_MAIN, FONT_BOLD, COLOR_PALETTE, get_font, TEXT_PRIMARY, THEME_MANAGER
 )
 from frontend_ui.ui import DepthCard, get_icon, get_main_logo
-from frontend_ui.views import StudentsView, ProgramsView, CollegesView
 from backend import create_backups
 from frontend_ui.auth import LoginFrame
 
@@ -26,44 +25,53 @@ class DashboardFrame(ctk.CTkFrame):
         super().__init__(parent, fg_color=BG_COLOR)
         self.controller = controller
         self.current_view = None
+
+        # lazy-import views here (not at module level) so matplotlib/numpy
+        # are not loaded until the dashboard is actually constructed.
+        from frontend_ui.views.students import StudentsView
+        from frontend_ui.views.programs import ProgramsView
+        from frontend_ui.views.colleges import CollegesView
+        self._StudentsView = StudentsView
+        self._ProgramsView = ProgramsView
+        self._CollegesView = CollegesView
         
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
-        # Register as theme listener for dynamic updates
+        # register as theme listener for dynamic updates
         THEME_MANAGER.register_listener(self.on_theme_change)
         
-        # Initialize logged_in state from controller
+        # initialize logged_in state from controller
         # (defaults to False for guest mode)
 
         self.create_topbar()
         self.create_title_bar()
 
-        # Main container with left content and right sidebar
+        # main container with left content and right sidebar
         main_container = ctk.CTkFrame(self, fg_color="transparent")
         main_container.grid(row=2, column=0, sticky="nsew", padx=0, pady=0)
         main_container.grid_rowconfigure(0, weight=1)
         main_container.grid_columnconfigure(0, weight=1)
         main_container.grid_columnconfigure(1, weight=0)
         
-        # Left content area - reduced top padding since title_bar has bottom padding
+        # left content area - reduced top padding since title_bar has bottom padding
         self.content_area = ctk.CTkFrame(main_container, fg_color="transparent")
         self.content_area.grid(row=0, column=0, sticky="nsew", padx=15, pady=(5, 15))
         self.content_area.grid_rowconfigure(0, weight=1)
         self.content_area.grid_columnconfigure(0, weight=1)
 
-        # Create views
+        # create views
         self.views = {}
-        for V in (StudentsView, ProgramsView, CollegesView):
+        for V in (self._StudentsView, self._ProgramsView, self._CollegesView):
             view = V(self.content_area, controller)
             self.views[V] = view
             view.grid(row=0, column=0, sticky="nsew")
 
-        self.show_view(StudentsView)
+        self.show_view(self._StudentsView)
 
     def create_topbar(self):
         """Create unified top navigation bar with logo, text, tabs, and controls."""
-        # Wrapper with margin
+        # wrapper with margin
         topbar_wrapper = ctk.CTkFrame(self, fg_color="transparent")
         topbar_wrapper.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 5))
         topbar_wrapper.grid_columnconfigure(0, weight=1)
@@ -73,33 +81,33 @@ class DashboardFrame(ctk.CTkFrame):
         topbar.pack(fill="both", expand=True)
         topbar.grid_propagate(False)
         
-        # Main container with three sections
+        # main container with three sections
         inner = ctk.CTkFrame(topbar, fg_color="transparent")
         inner.grid(row=0, column=0, sticky="nsew", padx=20, pady=10)
         topbar.grid_rowconfigure(0, weight=1)
         topbar.grid_columnconfigure(0, weight=1)
         inner.grid_rowconfigure(0, weight=1)
-        inner.grid_columnconfigure(1, weight=1)  # Center expands
+        inner.grid_columnconfigure(1, weight=1)  # center expands
         
-        # LEFT SECTION: Logo and "nexo." text
+        # left section: logo and "nexo." text
         left_section = ctk.CTkFrame(inner, fg_color="transparent")
         left_section.grid(row=0, column=0, sticky="nsew", padx=(0, 20))
         left_section.grid_rowconfigure(0, weight=1)
         left_section.grid_columnconfigure(0, weight=0)
         left_section.grid_columnconfigure(1, weight=0)
         
-        # Load main logo - bigger
+        # load main logo - bigger
         logo_img = get_main_logo(size=80)
         logo_label = ctk.CTkLabel(left_section, image=logo_img, text="")
-        logo_label.image = logo_img  # Keep reference to avoid GC
+        logo_label.image = logo_img  # keep reference to avoid gc
         logo_label.grid(row=0, column=0, padx=(0, 12))
-        self._logo_img = logo_img  # Store as instance variable
+        self._logo_img = logo_img  # store as instance variable
         
         # "nexo." text - bigger and bolder, centered vertically
         nexo_label = ctk.CTkLabel(left_section, text="nexo.", font=get_font(36, True), text_color="#9b8ba9")
         nexo_label.grid(row=0, column=1, sticky="ew")
         
-        # CENTER SECTION: Centralized navigation tabs with fixed sizing
+        # center section: centralized navigation tabs with fixed sizing
         center_frame = ctk.CTkFrame(inner, fg_color="transparent")
         center_frame.grid(row=0, column=1, sticky="nsew", padx=0)
         center_frame.grid_rowconfigure(0, weight=1)
@@ -109,13 +117,13 @@ class DashboardFrame(ctk.CTkFrame):
         
         self.nav_btns = {}
         
-        # Create small placeholder icons for tabs (kept as attributes to avoid GC)
+        # create small placeholder icons for tabs (kept as attributes to avoid gc)
         self._tab_icon_students = get_icon("users", size=20, fallback_color=ACCENT_COLOR)
         self._tab_icon_programs = get_icon("books", size=20, fallback_color="#6d5a8a")
         self._tab_icon_colleges = get_icon("building", size=20, fallback_color="#7a6a95")
 
-        # Students tab
-        self.nav_btns[StudentsView] = ctk.CTkButton(
+        # students tab
+        self.nav_btns[self._StudentsView] = ctk.CTkButton(
             center_frame,
             text="Students",
             image=self._tab_icon_students,
@@ -127,12 +135,12 @@ class DashboardFrame(ctk.CTkFrame):
             corner_radius=8,
             height=45,
             border_width=0,
-            command=lambda: self.show_view(StudentsView)
+            command=lambda: self.show_view(self._StudentsView)
         )
-        self.nav_btns[StudentsView].grid(row=0, column=0, sticky="ew", padx=5)
+        self.nav_btns[self._StudentsView].grid(row=0, column=0, sticky="ew", padx=5)
 
-        # Programs tab
-        self.nav_btns[ProgramsView] = ctk.CTkButton(
+        # programs tab
+        self.nav_btns[self._ProgramsView] = ctk.CTkButton(
             center_frame,
             text="Programs",
             image=self._tab_icon_programs,
@@ -144,12 +152,12 @@ class DashboardFrame(ctk.CTkFrame):
             corner_radius=8,
             height=45,
             border_width=0,
-            command=lambda: self.show_view(ProgramsView)
+            command=lambda: self.show_view(self._ProgramsView)
         )
-        self.nav_btns[ProgramsView].grid(row=0, column=1, sticky="ew", padx=5)
+        self.nav_btns[self._ProgramsView].grid(row=0, column=1, sticky="ew", padx=5)
 
-        # Colleges tab
-        self.nav_btns[CollegesView] = ctk.CTkButton(
+        # colleges tab
+        self.nav_btns[self._CollegesView] = ctk.CTkButton(
             center_frame,
             text="Colleges",
             image=self._tab_icon_colleges,
@@ -161,27 +169,27 @@ class DashboardFrame(ctk.CTkFrame):
             corner_radius=8,
             height=45,
             border_width=0,
-            command=lambda: self.show_view(CollegesView)
+            command=lambda: self.show_view(self._CollegesView)
         )
-        self.nav_btns[CollegesView].grid(row=0, column=2, sticky="ew", padx=5)
+        self.nav_btns[self._CollegesView].grid(row=0, column=2, sticky="ew", padx=5)
         
-        # RIGHT SECTION: Login/Logout button
+        # right section: login/logout button
         right_frame = ctk.CTkFrame(inner, fg_color="transparent")
         right_frame.grid(row=0, column=2, sticky="nsew", padx=(20, 0))
         
-        # Login/Logout button - bigger
+        # login/logout button - bigger
         self.auth_btn = ctk.CTkButton(right_frame, text="Login", fg_color=ACCENT_COLOR, 
                                       text_color="white", hover_color="#7C3AED", 
                                       font=get_font(12, True),
                                       height=45, width=100, command=self.handle_login_click)
         self.auth_btn.pack(side="left", padx=0)
         
-        # Update auth button state
+        # update auth button state
         self.update_auth_button()
 
     def create_title_bar(self):
         """Create title bar with page title on left and action buttons on right."""
-        # Wrapper with margin - increased top margin for equal spacing
+        # wrapper with margin - increased top margin for equal spacing
         title_bar_wrapper = ctk.CTkFrame(self, fg_color="transparent")
         title_bar_wrapper.grid(row=1, column=0, sticky="ew", padx=15, pady=(10, 10))
         title_bar_wrapper.grid_columnconfigure(0, weight=1)
@@ -200,33 +208,33 @@ class DashboardFrame(ctk.CTkFrame):
         inner.grid_columnconfigure(2, weight=0)
         inner.grid_rowconfigure(0, weight=1)
         
-        # Left: Page Title - aligned left, bolder, lighter purple
+        # left: page title - aligned left, bolder, lighter purple
         self.title_label = ctk.CTkLabel(inner, text="Students",
                                        font=get_font(28, True),
                                        text_color="#9b8ba9",
                                        anchor="w")
         self.title_label.grid(row=0, column=0, sticky="ew", padx=(0, 20))
         
-        # Center: Search Bar
+        # center: search bar
         self.search_entry = ctk.CTkEntry(inner, placeholder_text="Search", height=40,
                                          fg_color="#2A1F3D", border_color=BORDER_COLOR,
                                          text_color=TEXT_PRIMARY, font=("Century Gothic", 11))
         self.search_entry.grid(row=0, column=1, sticky="ew", padx=(0, 15))
         self.search_entry.bind("<KeyRelease>", self.handle_search_dynamic)
         
-        # Right: Button Container
+        # right: button container
         button_container = ctk.CTkFrame(inner, fg_color="transparent")
         button_container.grid(row=0, column=2, sticky="e", padx=(0, 0))
         
-        # Refresh Button with Icon
-        # Use packaged icon asset for refresh (avoid absolute local paths)
+        # refresh button with icon
+        # use packaged icon asset for refresh (avoid absolute local paths)
         self._refresh_icon = get_icon("refresh", size=20, fallback_color=ACCENT_COLOR)
         self.refresh_btn = ctk.CTkButton(button_container, text="", image=self._refresh_icon,
                                         width=50, height=50, fg_color="#2a1f35",
                                         hover_color="#3a2f45", border_width=0, command=self.handle_refresh)
         self.refresh_btn.pack(side="left", padx=(0, 8))
         
-        # Import Button
+        # import button
         self.import_btn = ctk.CTkButton(button_container, text="Import", width=110, height=50,
                                        font=get_font(12, True),
                                        fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY,
@@ -234,7 +242,7 @@ class DashboardFrame(ctk.CTkFrame):
                                        command=self.handle_import)
         self.import_btn.pack(side="left", padx=(0, 10))
         
-        # Add Entry Button
+        # add entry button
         self.add_btn = ctk.CTkButton(button_container, text="Add Entry", width=110, height=50,
                                     font=get_font(12, True),
                                     fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY,
@@ -242,7 +250,7 @@ class DashboardFrame(ctk.CTkFrame):
                                     command=self.handle_add_entry)
         self.add_btn.pack(side="left", padx=(0, 0))
         
-        # Disable add button and import button initially (guest mode)
+        # disable add button and import button initially (guest mode)
         self.update_button_states()
 
     def update_button_states(self):
@@ -297,12 +305,12 @@ class DashboardFrame(ctk.CTkFrame):
             self.handle_login_click()
             return
         
-        if self.current_view == StudentsView:
-            self.views[StudentsView].add_student()
-        elif self.current_view == ProgramsView:
-            self.views[ProgramsView].add_program()
-        elif self.current_view == CollegesView:
-            self.views[CollegesView].add_college()
+        if self.current_view == self._StudentsView:
+            self.views[self._StudentsView].add_student()
+        elif self.current_view == self._ProgramsView:
+            self.views[self._ProgramsView].add_program()
+        elif self.current_view == self._CollegesView:
+            self.views[self._CollegesView].add_college()
 
     def show_view(self, view_class):
         """Show a specific view."""
@@ -310,28 +318,28 @@ class DashboardFrame(ctk.CTkFrame):
         view.tkraise()
         self.current_view = view_class
 
-        # Update active tab styling
+        # update active tab styling
         for vc, btn in self.nav_btns.items():
             if vc == view_class:
                 btn.configure(fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY)
             else:
                 btn.configure(fg_color="#2a1f35", text_color=TEXT_PRIMARY)
         
-        # Update title and button label based on view
+        # update title and button label based on view
         self.update_title_card(view_class)
         
-        # Clear search on view change
+        # clear search on view change
         self.search_entry.delete(0, "end")
         
         self.views[view_class].refresh_table()
     
     def update_title_card(self, view_class):
         """Update title card label and button based on active view."""
-        if view_class == StudentsView:
+        if view_class == self._StudentsView:
             self.title_label.configure(text="Students")
-        elif view_class == ProgramsView:
+        elif view_class == self._ProgramsView:
             self.title_label.configure(text="Programs")
-        elif view_class == CollegesView:
+        elif view_class == self._CollegesView:
             self.title_label.configure(text="Colleges")
 
     def handle_search_dynamic(self, event):
@@ -370,7 +378,7 @@ class DashboardFrame(ctk.CTkFrame):
         
         ctk.CTkLabel(frame, text="Settings", font=get_font(22, True)).pack(anchor="w", pady=(0, 25))
         
-        # Appearance
+        # appearance
         ctk.CTkLabel(frame, text="Appearance", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkLabel(frame, text="Theme", font=FONT_BOLD).pack(anchor="w", pady=(5, 4))
         theme_combo = ctk.CTkOptionMenu(frame, values=["Dark", "Light"], height=40, font=FONT_MAIN,
@@ -382,7 +390,7 @@ class DashboardFrame(ctk.CTkFrame):
             theme_combo.set(ctk.get_appearance_mode())
         except Exception:
             pass
-        # Apply button to change theme immediately
+        # apply button to change theme immediately
         def _apply_theme():
             choice = theme_combo.get()
             self.apply_theme(choice)
@@ -390,7 +398,7 @@ class DashboardFrame(ctk.CTkFrame):
         ctk.CTkButton(frame, text="Apply Theme", height=36, command=_apply_theme,
                      fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY, hover_color="#7C3AED").pack(fill="x", pady=(0, 10))
         
-        # System
+        # system
         ctk.CTkLabel(frame, text="System", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkCheckBox(frame, text="Enable Notifications", height=30, font=FONT_MAIN,
                        fg_color=ACCENT_COLOR, checkmark_color=BG_COLOR).pack(anchor="w", pady=6)
@@ -399,14 +407,14 @@ class DashboardFrame(ctk.CTkFrame):
         ctk.CTkCheckBox(frame, text="Show Debug Info", height=30, font=FONT_MAIN,
                        fg_color=ACCENT_COLOR, checkmark_color=BG_COLOR).pack(anchor="w", pady=6)
         
-        # Account
+        # account
         ctk.CTkLabel(frame, text="Account", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkButton(frame, text="Change Password", height=40, font=FONT_MAIN,
                      fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY, hover_color="#7C3AED").pack(fill="x", pady=6)
         ctk.CTkButton(frame, text="Manage Admins", height=40, font=FONT_MAIN,
                      fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY, hover_color="#7C3AED").pack(fill="x", pady=6)
         
-        # Data
+        # data
         ctk.CTkLabel(frame, text="Data Management", font=get_font(15, True)).pack(anchor="w", pady=(15, 12))
         ctk.CTkButton(frame, text="Create Backup", height=40, font=FONT_MAIN,
                      fg_color=ACCENT_COLOR, text_color=TEXT_PRIMARY, hover_color="#7C3AED",
@@ -434,10 +442,10 @@ class DashboardFrame(ctk.CTkFrame):
             if mode not in ("dark", "light", "system"):
                 mode = "dark"
             
-            # Set the appearance mode globally
+            # set the appearance mode globally
             ctk.set_appearance_mode(mode)
             
-            # Notify all listeners of the theme change
+            # notify all listeners of the theme change
             THEME_MANAGER.notify_theme_change(mode)
             
         except Exception as e:
@@ -481,10 +489,10 @@ class DashboardFrame(ctk.CTkFrame):
     def on_theme_change(self, mode: str):
         """Callback when theme changes - refreshes all visible views."""
         try:
-            # Update current view if it exists
+            # update current view if it exists
             if self.current_view and self.current_view in self.views:
                 view = self.views[self.current_view]
-                # Force re-render of the view
+                # force re-render of the view
                 if hasattr(view, 'refresh_table'):
                     view.refresh_table()
         except Exception as e:

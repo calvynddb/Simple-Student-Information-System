@@ -37,7 +37,7 @@ class CollegeCRUD:
             return False, "College not found"
         
         college.update(updates)
-        college['code'] = college_code  # Preserve code
+        college['code'] = college_code  # preserve code
         save_csv('college', self.data)
         return True, "College updated"
     

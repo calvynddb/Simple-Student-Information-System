@@ -25,31 +25,31 @@ def download_icons():
         print("Install with: pip install requests svglib reportlab")
         return
     
-    # Create icons directory
+    # create icons directory
     icons_dir = Path("assets/icons")
     icons_dir.mkdir(parents=True, exist_ok=True)
     
-    # Icons to download from Tabler Icons (GitHub repository)
-    # Format: (icon_name, tabler_icon_name)
+    # icons to download from Tabler Icons (GitHub repository)
+    # format: (icon_name, tabler_icon_name)
     icons_to_download = [
-        ("users", "users"),  # Students
-        ("user", "user"),  # Single user
-        ("books", "books"),  # Programs
-        ("book", "book"),  # Single book
-        ("building", "building"),  # Colleges
-        ("settings", "settings"),  # Settings
-        ("arrow-left-end-on-rectangle", "arrow-left-end-on-rectangle"),  # Logout
-        ("search", "search"),  # Search
-        ("plus", "plus"),  # Add new
-        ("trash", "trash"),  # Delete
-        ("edit", "edit"),  # Edit
-        ("check", "check"),  # Confirm
-        ("x", "x"),  # Cancel
+        ("users", "users"),  # students
+        ("user", "user"),  # single user
+        ("books", "books"),  # programs
+        ("book", "book"),  # single book
+        ("building", "building"),  # colleges
+        ("settings", "settings"),  # settings
+        ("arrow-left-end-on-rectangle", "arrow-left-end-on-rectangle"),  # logout
+        ("search", "search"),  # search
+        ("plus", "plus"),  # add new
+        ("trash", "trash"),  # delete
+        ("edit", "edit"),  # edit
+        ("check", "check"),  # confirm
+        ("x", "x"),  # cancel
     ]
     
-    # GitHub raw content URL for Tabler Icons
+    # gitHub raw content URL for Tabler Icons
     github_base = "https://raw.githubusercontent.com/tabler/tabler-icons/master/icons"
-    theme_color = "#6d28d9"  # Your muted purple color
+    theme_color = "#6d28d9"  # your muted purple color
     
     downloaded = []
     failed = []
@@ -60,7 +60,7 @@ def download_icons():
         try:
             print(f"Downloading {icon_name}...", end=" ", flush=True)
             
-            # Download SVG
+            # download SVG
             response = requests.get(svg_url, timeout=5)
             if response.status_code != 200:
                 print(f"FAILED (404)")
@@ -69,8 +69,8 @@ def download_icons():
             
             svg_content = response.text
             
-            # Replace color in SVG with theme color
-            # Tabler icons use currentColor or opacity, we'll inject color via style
+            # replace color in SVG with theme color
+            # tabler icons use currentColor or opacity, we'll inject color via style
             svg_content = svg_content.replace(
                 'stroke="currentColor"',
                 f'stroke="{theme_color}" stroke-width="1.5"'
@@ -80,29 +80,29 @@ def download_icons():
                 f'stroke-width="1.5"'
             )
             
-            # Save temporary SVG file
+            # save temporary SVG file
             temp_svg = icons_dir / f"temp_{icon_name}.svg"
             with open(temp_svg, 'w') as f:
                 f.write(svg_content)
             
-            # Convert SVG to PNG at multiple sizes using svglib
+            # convert SVG to PNG at multiple sizes using svglib
             for size in [18, 22, 28, 36]:
                 png_path = icons_dir / f"{icon_name}_{size}.png"
                 
                 try:
-                    # Convert SVG to ReportLab drawing
+                    # convert SVG to ReportLab drawing
                     drawing = svg2rlg(str(temp_svg))
                     if drawing:
-                        # Scale drawing
+                        # scale drawing
                         drawing.width = size
                         drawing.height = size
                         
-                        # Render to PNG
+                        # render to PNG
                         renderPM.drawToFile(drawing, str(png_path), fmt='PNG', dpi=72)
                 except Exception as svg_err:
                     print(f"(size {size} failed: {svg_err})", end=" ")
             
-            # Clean up temp SVG
+            # clean up temp SVG
             temp_svg.unlink(missing_ok=True)
             
             print("✓")
@@ -112,7 +112,7 @@ def download_icons():
             print(f"FAILED ({e})")
             failed.append(icon_name)
     
-    # Summary
+    # summary
     print(f"\n{'='*50}")
     print(f"Downloaded: {len(downloaded)} icons")
     print(f"Failed: {len(failed)} icons")
@@ -132,7 +132,7 @@ def create_icon_manifest():
     
     icons = {}
     for png_file in icons_dir.glob("*.png"):
-        # Extract icon name (remove size suffix)
+        # extract icon name (remove size suffix)
         name = png_file.stem.rsplit("_", 1)[0]
         if name not in icons:
             icons[name] = []

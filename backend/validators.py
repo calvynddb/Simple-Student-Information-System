@@ -12,11 +12,11 @@ def validate_student(record):
         if not record.get(k):
             return False, f"Missing field: {k}"
 
-    # ID must not contain letters
+    # id must not contain letters
     if re.search(r'[A-Za-z]', record.get('id', '')):
         return False, "Student ID cannot contain letters"
 
-    # Names should not contain digits
+    # names should not contain digits
     if re.search(r'\d', record.get('firstname', '')) or re.search(r'\d', record.get('lastname', '')):
         return False, "Names cannot contain numbers"
 

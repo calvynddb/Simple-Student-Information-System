@@ -8,8 +8,101 @@ from pathlib import Path
 from config import PANEL_COLOR, TEXT_MUTED, BORDER_COLOR, PANEL_SELECTED, get_font, resource_path
 
 
-# Icon cache to avoid reloading
+# icon cache to avoid reloading
 _icon_cache = {}
+
+
+def show_dialog(parent, title, message, dialog_type="info", callback=None):
+    """Show a custom-styled dialog matching the app theme.
+
+    dialog_type: 'info', 'error', 'warning', 'yesno'
+    For 'yesno' returns True/False. For others returns None.
+    """
+    from config import BG_COLOR, ACCENT_COLOR, TEXT_PRIMARY, TEXT_MUTED, PANEL_COLOR, BORDER_COLOR, get_font
+
+    result = [None]  # mutable container for yesno result
+
+    dialog_window = ctk.CTkToplevel(parent)
+    dialog_window.title(title)
+    dialog_window.overrideredirect(False)
+    dialog_window.configure(fg_color=BG_COLOR)
+    dialog_window.attributes('-topmost', True)
+    dialog_window.grab_set()
+    dialog_window.focus_force()
+
+    # size based on message length
+    msg_len = len(message)
+    height = 200 if msg_len < 100 else 250 if msg_len < 200 else 300
+    dialog_window.geometry(f"450x{height}")
+
+    dialog_window.update_idletasks()
+    x = (dialog_window.winfo_screenwidth() // 2) - 225
+    y = (dialog_window.winfo_screenheight() // 2) - (height // 2)
+    dialog_window.geometry(f"+{x}+{y}")
+
+    # pick accent color by dialog type
+    if dialog_type == "error":
+        accent = "#c41e3a"
+        icon_text = "ERROR"
+    elif dialog_type == "warning":
+        accent = "#d4a017"
+        icon_text = "WARNING"
+    elif dialog_type == "yesno":
+        accent = ACCENT_COLOR
+        icon_text = "CONFIRM"
+    else:
+        accent = ACCENT_COLOR
+        icon_text = "INFO"
+
+    # content frame
+    frame = ctk.CTkFrame(dialog_window, fg_color="transparent")
+    frame.pack(fill="both", expand=True, padx=30, pady=30)
+
+    # type badge
+    badge = ctk.CTkLabel(frame, text=icon_text, font=get_font(9, True),
+                         text_color="white", fg_color=accent, corner_radius=6,
+                         width=70, height=22)
+    badge.pack(pady=(0, 10))
+
+    # title label
+    ctk.CTkLabel(frame, text=title, font=get_font(14, True), text_color=TEXT_PRIMARY).pack(pady=(0, 10))
+
+    # message label
+    ctk.CTkLabel(frame, text=message, font=get_font(11), text_color=TEXT_MUTED,
+                 wraplength=380).pack(pady=(0, 20), fill="both", expand=True)
+
+    # buttons
+    button_frame = ctk.CTkFrame(frame, fg_color="transparent")
+    button_frame.pack(fill="x")
+
+    if dialog_type == "yesno":
+        def _yes():
+            result[0] = True
+            if callback:
+                callback(True)
+            dialog_window.destroy()
+
+        def _no():
+            result[0] = False
+            if callback:
+                callback(False)
+            dialog_window.destroy()
+
+        ctk.CTkButton(button_frame, text="Yes", fg_color=accent, text_color="white",
+                      hover_color="#7C3AED", font=get_font(11, True), height=36,
+                      command=_yes).pack(side="left", fill="x", expand=True, padx=(0, 8))
+        ctk.CTkButton(button_frame, text="No", fg_color="#3a3a3f", text_color="white",
+                      hover_color="#4a4a4f", font=get_font(11, True), height=36,
+                      command=_no).pack(side="left", fill="x", expand=True, padx=(8, 0))
+    else:
+        ctk.CTkButton(button_frame, text="OK", fg_color=accent, text_color="white",
+                      hover_color="#7C3AED", font=get_font(11, True), height=36,
+                      command=dialog_window.destroy).pack(fill="x")
+
+    dialog_window.protocol("WM_DELETE_WINDOW",
+                            lambda: (result.__setitem__(0, False), dialog_window.destroy()))
+    parent.wait_window(dialog_window)
+    return result[0]
 
 
 def get_icon(name: str, size: int = 36, fallback_color: str = "#6d28d9"):
@@ -25,17 +118,17 @@ def get_icon(name: str, size: int = 36, fallback_color: str = "#6d28d9"):
     """
     cache_key = f"{name}_{size}"
     
-    # Return from cache if available
+    # return from cache if available
     if cache_key in _icon_cache:
         return _icon_cache[cache_key]
     
-    # Try to load base icon first and scale it (prioritize custom icons)
+    # try to load base icon first and scale it (prioritize custom icons)
     base_icon_path = Path(resource_path(f"assets/icons/{name}.png"))
     if base_icon_path.exists():
         try:
             from PIL import Image
             pil = Image.open(base_icon_path)
-            # Resize to requested size
+            # resize to requested size
             pil = pil.resize((size, size), Image.Resampling.LANCZOS)
             img = ctk.CTkImage(light_image=pil, size=(size, size))
             _icon_cache[cache_key] = img
@@ -43,7 +136,7 @@ def get_icon(name: str, size: int = 36, fallback_color: str = "#6d28d9"):
         except Exception as e:
             print(f"Error loading icon {base_icon_path}: {e}")
     
-    # Fallback: try to load PNG icon with exact size
+    # fallback: try to load PNG icon with exact size
     icon_path = Path(resource_path(f"assets/icons/{name}_{size}.png"))
     
     if icon_path.exists():
@@ -56,7 +149,7 @@ def get_icon(name: str, size: int = 36, fallback_color: str = "#6d28d9"):
         except Exception as e:
             print(f"Error loading icon {icon_path}: {e}")
     
-    # Fallback: return colored square placeholder
+    # fallback: return colored square placeholder
     return placeholder_image(size=size, color=fallback_color)
 
 
@@ -75,14 +168,14 @@ def get_main_logo(size: int = 56):
         try:
             from PIL import Image
             pil = Image.open(logo_path)
-            # Resize to requested size, maintaining aspect ratio
+            # resize to requested size, maintaining aspect ratio
             pil.thumbnail((size, size), Image.Resampling.LANCZOS)
             img = ctk.CTkImage(light_image=pil, size=(size, size))
             return img
         except Exception as e:
             print(f"Error loading logo {logo_path}: {e}")
     
-    # Fallback to user icon if logo not found
+    # fallback to user icon if logo not found
     return get_icon("user", size=size)
 
 
@@ -105,10 +198,10 @@ def setup_treeview_style():
         padding=2
     )
     style.map('Treeview', background=[('selected', PANEL_SELECTED)])
-    # Make headings look like interactive buttons with distinct styling
-    HEADING_BG = "#13101a"       # Slightly darker than panel — distinct header row
-    HEADING_HOVER = "#2d1f45"    # Purple tint on hover — signals interactivity
-    HEADING_FG = "#a8a8b5"       # Slightly brighter than TEXT_MUTED for contrast
+    # make headings look like interactive buttons with distinct styling
+    HEADING_BG = "#13101a"       # slightly darker than panel — distinct header row
+    HEADING_HOVER = "#2d1f45"    # purple tint on hover — signals interactivity
+    HEADING_FG = "#a8a8b5"       # slightly brighter than TEXT_MUTED for contrast
     style.configure(
         "Treeview.Heading",
         background=HEADING_BG,
@@ -122,7 +215,7 @@ def setup_treeview_style():
               background=[('active', HEADING_HOVER)],
               foreground=[('active', '#e8e8f0')])
 
-    # Remove focus ring highlight
+    # remove focus ring highlight
     try:
         style.configure('Treeview', highlightthickness=0, focuscolor="")
     except Exception:
@@ -135,13 +228,13 @@ def placeholder_image(size=36, color="#303035"):
     The PhotoImage should be kept referenced by the caller (e.g., widget.image = img)
     to avoid garbage collection.
     """
-    # Prefer creating a CTkImage from a PIL Image so CustomTkinter can scale it on HiDPI
+    # prefer creating a CTkImage from a PIL Image so CustomTkinter can scale it on HiDPI
     try:
         from PIL import Image
         pil = Image.new('RGBA', (size, size), color)
         return ctk.CTkImage(light_image=pil, size=(size, size))
     except Exception:
-        # Fallback: create a tkinter.PhotoImage and try to wrap it in CTkImage
+        # fallback: create a tkinter.PhotoImage and try to wrap it in CTkImage
         img = tk.PhotoImage(width=size, height=size)
         try:
             img.put(color, to=(0, 0, size - 1, size - 1))

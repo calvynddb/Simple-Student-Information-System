@@ -15,23 +15,23 @@ class LoginFrame(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Center Container
+        # center container
         center_frame = ctk.CTkFrame(self, fg_color="transparent")
         center_frame.grid(row=0, column=0, sticky="nsew")
         center_frame.grid_rowconfigure(0, weight=1)
         center_frame.grid_columnconfigure(0, weight=1)
 
-        # Clean, flat card with depth effect - dark themed
+        # clean, flat card with depth effect - dark themed
         card = DepthCard(center_frame, fg_color=PANEL_COLOR, corner_radius=20, border_width=2, border_color=BORDER_COLOR, width=520, height=640)
         card.grid(row=0, column=0, padx=20, pady=20)
         card.grid_propagate(False)
         card.pack_propagate(False)
 
-        # Logo - extra large for prominent display
+        # logo - extra large for prominent display
         logo_frame = ctk.CTkFrame(card, fg_color="transparent")
         logo_frame.pack(pady=(30, 25))
         
-        # Load main logo - extra big
+        # load main logo - extra big
         try:
             self._logo_img = get_main_logo(size=150)
             lbl = ctk.CTkLabel(logo_frame, image=self._logo_img, text="")
@@ -46,7 +46,7 @@ class LoginFrame(ctk.CTkFrame):
         self.username_entry = self.create_input(card, "Username", "👤  Enter your username")
         self.password_entry = self.create_input(card, "Password", "🔒  Enter your password", show="*")
 
-        # Templated Login Function with enhanced button
+        # templated login function with enhanced button
         ctk.CTkButton(card, text="Sign In", font=get_font(13, True), fg_color=ACCENT_COLOR, text_color="white", hover_color="#6d5a8a", height=48, corner_radius=10, 
                       command=self.handle_login).pack(fill="x", padx=50, pady=(22, 12))
         
@@ -75,7 +75,7 @@ class LoginFrame(ctk.CTkFrame):
             self.controller.show_custom_dialog("Error", "Please enter username and password", dialog_type="error")
             return
         
-        # Simple authentication (for demo)
+        # simple authentication (for demo)
         if user == "admin" and pwd == "admin":
             self.controller.logged_in = True
             from frontend_ui.dashboard import DashboardFrame

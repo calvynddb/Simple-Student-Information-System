@@ -37,7 +37,7 @@ class ProgramCRUD:
             return False, "Program not found"
         
         program.update(updates)
-        program['code'] = program_code  # Preserve code
+        program['code'] = program_code  # preserve code
         save_csv('program', self.data)
         return True, "Program updated"
     

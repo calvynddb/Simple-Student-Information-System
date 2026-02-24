@@ -17,13 +17,13 @@ def init_files():
     """
     for key, filepath in FILES.items():
         if not os.path.exists(filepath):
-            # If running frozen, try to copy the bundled seed CSV first
+            # if running frozen, try to copy the bundled seed csv first
             if getattr(sys, 'frozen', False):
                 bundled = resource_path(os.path.basename(filepath))
                 if os.path.exists(bundled):
                     shutil.copy2(bundled, filepath)
                     continue
-            # Otherwise create empty CSV with headers
+            # otherwise create empty csv with headers
             with open(filepath, 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=FIELDS[key])
                 writer.writeheader()
@@ -45,7 +45,7 @@ def save_csv(key, data):
         try:
             writer.writerows(data)
         except Exception:
-            # Fail-safe: write rows that are dict-like only
+            # fail-safe: write rows that are dict-like only
             safe_rows = []
             for r in data:
                 if isinstance(r, dict):

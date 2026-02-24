@@ -22,25 +22,25 @@ class StudentsView(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.sort_column = None
         self.sort_reverse = False
-        self.column_names = {}  # Store original column names
+        self.column_names = {}  # store original column names
         self.setup_ui()
 
     def setup_ui(self):
-        # Table Container
+        # table Container
         table_container = DepthCard(self, fg_color=PANEL_COLOR, corner_radius=15, border_width=2, border_color=BORDER_COLOR)
         table_container.grid(row=1, column=0, sticky="nsew", columnspan=2)
         
         setup_treeview_style()
         cols = ("ID", "First Name", "Last Name", "Gender", "Year", "Program", "College")
-        # Create treeview without scrollbar and with fixed height of 12 rows
+        # create treeview without scrollbar and with fixed height of 12 rows
         self.tree = ttk.Treeview(table_container, columns=cols, show="headings", style="Treeview", height=12)
         
-        # Store original column names and add sort hint
+        # store original column names and add sort hint
         for c in cols:
             self.column_names[c] = c.upper()
             self.tree.heading(c, text=c.upper() + " ⇅")
         
-        # Column widths and anchoring - center-align all content
+        # column widths and anchoring - center-align all content
         self.tree.column("ID", width=70, anchor="center", stretch=False)
         self.tree.column("First Name", width=130, anchor="center", stretch=False)
         self.tree.column("Last Name", width=130, anchor="center", stretch=False)
@@ -51,7 +51,7 @@ class StudentsView(ctk.CTkFrame):
         
         self.tree.pack(fill="both", expand=True, padx=15, pady=(15, 12))
 
-        # Pagination controls - integrated layout
+        # pagination controls - integrated layout
         ctrl = ctk.CTkFrame(table_container, fg_color="transparent")
         ctrl.pack(fill="x", padx=15, pady=(10,12))
 
@@ -61,11 +61,11 @@ class StudentsView(ctk.CTkFrame):
         self._last_hover = None
         self.table_container = table_container
 
-        # Left section: Previous button, pagination, and Next button together
+        # left section: Previous button, pagination, and Next button together
         left_ctrl = ctk.CTkFrame(ctrl, fg_color="transparent")
         left_ctrl.pack(side="left")
         
-        # Previous Button
+        # previous Button
         self.prev_btn = ctk.CTkButton(
             left_ctrl, 
             text="◀ Prev", 
@@ -77,12 +77,12 @@ class StudentsView(ctk.CTkFrame):
         )
         self.prev_btn.pack(side="left", padx=(0,8))
 
-        # Pagination indicator frame
+        # pagination indicator frame
         self.pagination_frame = ctk.CTkFrame(left_ctrl, fg_color="transparent")
         self.pagination_frame.pack(side="left", padx=8)
         self.page_buttons = []
         
-        # Next Button - right next to pagination
+        # next Button - right next to pagination
         self.next_btn = ctk.CTkButton(
             left_ctrl, 
             text="Next ▶", 
@@ -94,7 +94,7 @@ class StudentsView(ctk.CTkFrame):
         )
         self.next_btn.pack(side="left", padx=(8,0))
         
-        # Go to page section
+        # go to page section
         goto_frame = ctk.CTkFrame(left_ctrl, fg_color="transparent")
         goto_frame.pack(side="left", padx=(15, 0))
         
@@ -112,16 +112,16 @@ class StudentsView(ctk.CTkFrame):
                                     command=self.go_to_page)
         self.go_btn.pack(side="left")
         
-        # Right section: Entry count only
+        # right section: Entry count only
         right_ctrl = ctk.CTkFrame(ctrl, fg_color="transparent")
         right_ctrl.pack(side="right")
         
-        # Entry count label
+        # entry count label
         self.entry_count_label = ctk.CTkLabel(right_ctrl, text="Showing 0 of 0 entries", 
                                              font=get_font(11), text_color=TEXT_MUTED)
         self.entry_count_label.pack(side="left", padx=0)
 
-        # Bind configure event to update page size dynamically
+        # bind configure event to update page size dynamically
         table_container.bind('<Configure>', self._on_table_configure)
         
         self.tree.bind("<Button-1>", self.on_column_click)
@@ -132,7 +132,7 @@ class StudentsView(ctk.CTkFrame):
         self.tree.tag_configure('even', background="#0f0d12")
         self.tree.tag_configure('hover', background="#6d5a8a", foreground="#ffffff")
         
-        # Button-style tags for action columns
+        # button-style tags for action columns
         self.tree.tag_configure('action_button', foreground=ACCENT_COLOR, font=get_font(10, True), background=PANEL_COLOR)
         self.tree.tag_configure('action_button_delete', foreground="#ff6b6b", font=get_font(10, True), background=PANEL_COLOR)
         
@@ -171,7 +171,7 @@ class StudentsView(ctk.CTkFrame):
             tag = 'even' if idx % 2 == 0 else 'odd'
             self.tree.insert("", "end", values=row, tags=(tag,))
         
-        # Update entry count - show range (e.g., "Showing 1-12 of 100 entries")
+        # update entry count - show range (e.g., "Showing 1-12 of 100 entries")
         if total > 0:
             display_text = f"Showing {start + 1}-{end} of {total} entries"
         else:
@@ -223,30 +223,30 @@ class StudentsView(ctk.CTkFrame):
                 self._render_page()
                 self.page_entry.delete(0, "end")
         except ValueError:
-            # Invalid input, just clear the entry
+            # invalid input, just clear the entry
             self.page_entry.delete(0, "end")
 
     def _on_table_configure(self, event):
-        # Adjust column widths based on available width with proportions
+        # adjust column widths based on available width with proportions
         available_width = max(self.table_container.winfo_width() - 20, 200)
-        if available_width < 100:  # Skip if window is too small
+        if available_width < 100:  # skip if window is too small
             return
         cols = ["ID", "First Name", "Last Name", "Gender", "Year", "Program", "College"]
         props = [0.10, 0.18, 0.19, 0.11, 0.09, 0.17, 0.16]
         for i, col in enumerate(cols):
             self.tree.column(col, width=max(int(available_width * props[i]), 50))
         
-        # Get actual available height and calculate how many rows can fit
+        # get actual available height and calculate how many rows can fit
         available_height = self.table_container.winfo_height()
-        if available_height < 100:  # Skip if window is too small
+        if available_height < 100:  # skip if window is too small
             return
-        # Account for: Treeview header (~20px) + padding (~12px) + pagination controls (~55px)
+        # account for: Treeview header (~20px) + padding (~12px) + pagination controls (~55px)
         reserved_height = 20 + 12 + 55
         usable_height = max(available_height - reserved_height, 50)
-        row_height = 48  # Height of each row (matches treeview rowheight in setup_treeview_style)
-        new_page_size = max(8, usable_height // row_height)  # Show at least 8 rows
+        row_height = 48  # height of each row (matches treeview rowheight in setup_treeview_style)
+        new_page_size = max(8, usable_height // row_height)  # show at least 8 rows
         
-        # Update treeview height to match page size
+        # update treeview height to match page size
         self.tree.configure(height=new_page_size)
         
         if new_page_size != self.page_size:
@@ -262,10 +262,10 @@ class StudentsView(ctk.CTkFrame):
 
     def _on_tree_motion(self, event):
         region = self.tree.identify_region(event.x, event.y)
-        # Change cursor to hand when hovering over sortable headings
+        # change cursor to hand when hovering over sortable headings
         if region == "heading":
             self.tree.configure(cursor="hand2")
-            # Clear any row hover
+            # clear any row hover
             if getattr(self, '_last_hover', None):
                 prev_row = self._last_hover
                 if prev_row in self.tree.get_children():
@@ -286,10 +286,10 @@ class StudentsView(ctk.CTkFrame):
             return
         if getattr(self, '_last_hover', None):
             prev_row = self._last_hover
-            # Check if the previous row still exists
+            # check if the previous row still exists
             if prev_row in self.tree.get_children():
                 self.tree.item(prev_row, tags=())
-        # Set hover tag as the only tag for this row
+        # set hover tag as the only tag for this row
         self.tree.item(row, tags=('hover',))
         self._last_hover = row
 
@@ -297,9 +297,9 @@ class StudentsView(ctk.CTkFrame):
         self.tree.configure(cursor="")
         if getattr(self, '_last_hover', None):
             prev_row = self._last_hover
-            # Check if the row still exists
+            # check if the row still exists
             if prev_row in self.tree.get_children():
-                # Restore the striping tag
+                # restore the striping tag
                 items = self.tree.get_children()
                 if prev_row in items:
                     idx = items.index(prev_row)
@@ -340,7 +340,7 @@ class StudentsView(ctk.CTkFrame):
             except Exception:
                 col_id = self.tree.heading(col, "text")
             
-            # Restore sort hint on previous sort column
+            # restore sort hint on previous sort column
             if self.sort_column and self.sort_column != col_id:
                 self.tree.heading(self.sort_column, text=self.column_names.get(self.sort_column, self.sort_column) + " ⇅")
             
@@ -353,7 +353,7 @@ class StudentsView(ctk.CTkFrame):
             self.update_sort_arrow()
             self.sort_table()
         elif region == "cell":
-            # Show student profile on row click
+            # show student profile on row click
             row = self.tree.identify_row(event.y)
             if not row:
                 return
@@ -369,7 +369,7 @@ class StudentsView(ctk.CTkFrame):
         if not self.sort_column:
             return
         
-        # Get the original column name
+        # get the original column name
         col_name = self.column_names.get(self.sort_column, self.sort_column)
         arrow = " ▼" if self.sort_reverse else " ▲"
         self.tree.heading(self.sort_column, text=col_name + arrow)
@@ -378,11 +378,11 @@ class StudentsView(ctk.CTkFrame):
         if not self.sort_column:
             return
         
-        # Sort the entire _last_page_items list
+        # sort the entire _last_page_items list
         col_index = self.tree['columns'].index(self.sort_column) if self.sort_column in self.tree['columns'] else 0
         self._last_page_items.sort(key=lambda x: self.try_numeric(str(x[col_index])), reverse=self.sort_reverse)
         
-        # Re-render the current page
+        # re-render the current page
         self._render_page()
     
     @staticmethod
@@ -415,7 +415,7 @@ class StudentsView(ctk.CTkFrame):
         container = ctk.CTkFrame(profile_window, fg_color="transparent")
         container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Header with avatar and name
+        # header with avatar and name
         header = DepthCard(container, fg_color=PANEL_COLOR, corner_radius=12, border_width=2, border_color=BORDER_COLOR)
         header.pack(fill="x", pady=(0, 15))
 
@@ -433,14 +433,14 @@ class StudentsView(ctk.CTkFrame):
         ctk.CTkLabel(text_frame, text=name, font=get_font(16, True), wraplength=550, justify="left", anchor="w").pack(fill="x", anchor="w")
         ctk.CTkLabel(text_frame, text=f"ID: {student.get('id', '')}", text_color=TEXT_MUTED, font=get_font(11), anchor="w").pack(fill="x", anchor="w", pady=(4, 0))
 
-        # Info card with scrollable content
+        # info card with scrollable content
         info_card = DepthCard(container, fg_color=PANEL_COLOR, corner_radius=12, border_width=2, border_color=BORDER_COLOR)
         info_card.pack(fill="both", expand=True, pady=(0, 15))
 
         info_scroll = ctk.CTkScrollableFrame(info_card, fg_color="transparent")
         info_scroll.pack(fill="both", expand=True, padx=15, pady=15)
 
-        # Information grid
+        # information grid
         def add_info_row(label, value):
             row = ctk.CTkFrame(info_scroll, fg_color="transparent")
             row.pack(fill="x", pady=8)
@@ -459,7 +459,7 @@ class StudentsView(ctk.CTkFrame):
         college_name = next((c['name'] for c in self.controller.colleges if c['code'] == next((p['college'] for p in self.controller.programs if p['code'] == student.get('program')), '')), 'N/A')
         add_info_row("College:", college_name)
 
-        # Action buttons - only show if authenticated
+        # action buttons - only show if authenticated
         btn_frame = ctk.CTkFrame(container, fg_color="transparent")
         btn_frame.pack(fill="x")
 
@@ -472,18 +472,18 @@ class StudentsView(ctk.CTkFrame):
                 profile_window.destroy()
                 self._delete_student_by_id(student_id)
 
-        # Only show edit/delete buttons if user is logged in
+        # only show edit/delete buttons if user is logged in
         if self.controller.logged_in:
             ctk.CTkButton(btn_frame, text="Edit", command=_edit, fg_color=ACCENT_COLOR, text_color="white", font=FONT_BOLD, height=40).pack(side="left", fill="x", expand=True, padx=(0, 5))
             ctk.CTkButton(btn_frame, text="Delete", command=_delete, fg_color="#c41e3a", text_color="white", font=FONT_BOLD, height=40).pack(side="left", fill="x", expand=True, padx=(5, 0))
         else:
-            # Show message prompting login
+            # show message prompting login
             login_msg = ctk.CTkLabel(btn_frame, text="🔒 Log in to edit or delete", font=get_font(11), text_color=TEXT_MUTED)
             login_msg.pack(fill="x", pady=10)
 
     def _edit_student(self, student_id):
         """Edit student in a modal window."""
-        # Check authentication
+        # check authentication
         if not self.controller.logged_in:
             self.controller.show_custom_dialog("Access Denied", "You must log in to edit students.")
             return
@@ -612,7 +612,7 @@ class StudentsView(ctk.CTkFrame):
 
     def _delete_student_by_id(self, student_id):
         """Delete a student by ID."""
-        # Check authentication
+        # check authentication
         if not self.controller.logged_in:
             self.controller.show_custom_dialog("Access Denied", "You must log in to delete students.")
             return
@@ -633,7 +633,7 @@ class StudentsView(ctk.CTkFrame):
         pass
 
     def add_student(self):
-        # Check authentication
+        # check authentication
         if not self.controller.logged_in:
             self.controller.show_custom_dialog("Access Denied", "You must log in to add students.")
             return
@@ -696,7 +696,7 @@ class StudentsView(ctk.CTkFrame):
             year = year_combo.get()
             program = program_widget.get()
             
-            # Check empty fields
+            # check empty fields
             if not student_id:
                 return False, "Student ID is required"
             if not fname:
@@ -710,15 +710,15 @@ class StudentsView(ctk.CTkFrame):
             if not program:
                 return False, "Program must be selected"
             
-            # Check ID format
+            # check ID format
             if len(student_id) < 3:
                 return False, "Student ID must be at least 3 characters"
             
-            # Check for duplicate ID
+            # check for duplicate ID
             if any(s['id'] == student_id for s in self.controller.students):
                 return False, "Student ID already exists"
             
-            # Check name format (only letters and spaces)
+            # check name format (only letters and spaces)
             if not fname.replace(" ", "").isalpha():
                 return False, "First Name must contain only letters and spaces"
             if not lname.replace(" ", "").isalpha():
@@ -733,8 +733,8 @@ class StudentsView(ctk.CTkFrame):
                 return
             
             student_id = id_entry.get().strip()
-            fname = fname_entry.get().strip().title()  # Capitalize
-            lname = lname_entry.get().strip().title()  # Capitalize
+            fname = fname_entry.get().strip().title()  # capitalize
+            lname = lname_entry.get().strip().title()  # capitalize
             gender = gender_combo.get()
             year = year_combo.get()
             program = program_widget.get()
@@ -763,7 +763,7 @@ class StudentsView(ctk.CTkFrame):
             modal.destroy()
             self.controller.show_custom_dialog("Success", "Student added successfully!")
         
-        # Button row: Save and Cancel
+        # button row: Save and Cancel
         btn_row = ctk.CTkFrame(form_frame, fg_color="transparent")
         btn_row.pack(fill="x", pady=(8,0))
         ctk.CTkButton(btn_row, text="Save Student", command=save, height=40, 
@@ -773,7 +773,7 @@ class StudentsView(ctk.CTkFrame):
 
     def import_data(self):
         """Import students from CSV file."""
-        # Check authentication
+        # check authentication
         if not self.controller.logged_in:
             self.controller.show_custom_dialog("Access Denied", "You must log in to import students.")
             return
@@ -798,7 +798,7 @@ class StudentsView(ctk.CTkFrame):
                 reader = csv.DictReader(f)
                 existing_ids = set()
                 
-                # Load existing IDs
+                # load existing IDs
                 try:
                     import csv as csv_module
                     with open(FILES['student'], 'r', encoding='utf-8') as existing:
@@ -810,7 +810,7 @@ class StudentsView(ctk.CTkFrame):
                 
                 rows_to_add = []
                 for row_num, row in enumerate(reader, start=2):
-                    # Validate the row
+                    # validate the row
                     is_valid, error_msg = validate_student({
                         'id': row.get('id', ''),
                         'firstname': row.get('firstname', ''),
@@ -825,7 +825,7 @@ class StudentsView(ctk.CTkFrame):
                         errors.append(f"Row {row_num}: {error_msg}")
                         continue
                     
-                    # Check if ID already exists
+                    # check if ID already exists
                     if row.get('id') in existing_ids:
                         error_count += 1
                         errors.append(f"Row {row_num}: Student ID {row.get('id')} already exists")
@@ -835,7 +835,7 @@ class StudentsView(ctk.CTkFrame):
                     existing_ids.add(row.get('id'))
                     imported_count += 1
                 
-                # Append to CSV file
+                # append to CSV file
                 if rows_to_add:
                     with open(FILES['student'], 'a', newline='', encoding='utf-8') as f:
                         writer = csv.DictWriter(f, fieldnames=['id', 'firstname', 'lastname', 'program', 'year', 'gender'])
@@ -851,7 +851,7 @@ class StudentsView(ctk.CTkFrame):
                     
                     self.refresh_table()
             
-            # Show results
+            # show results
             if error_count == 0:
                 self.controller.show_custom_dialog("Import Success", f"Successfully imported {imported_count} students!")
             else:
