@@ -226,7 +226,7 @@ class DashboardFrame(ctk.CTkFrame):
         # center: search bar
         self.search_entry = ctk.CTkEntry(inner, placeholder_text="Search", height=40,
                                          fg_color="#2A1F3D", border_color=BORDER_COLOR,
-                                         text_color=TEXT_PRIMARY, font=("Century Gothic", 11))
+                                         text_color=TEXT_PRIMARY, font=("Century Gothic", 14))
         self.search_entry.grid(row=0, column=1, sticky="ew", padx=(0, 15))
         self.search_entry.bind("<KeyRelease>", self.handle_search_dynamic)
         
