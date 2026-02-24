@@ -689,8 +689,6 @@ class StudentsView(ctk.CTkFrame):
         ctk.CTkLabel(form_frame, text="Program", font=FONT_BOLD).pack(anchor="w", pady=(10, 0))
         program_values = [p['code'] for p in self.controller.programs]
         program_widget = SearchableComboBox(form_frame, program_values)
-        if program_values:
-            program_widget.set(program_values[0])
         program_widget.pack(fill="x", pady=(0, 20))
         
         def validate_form():

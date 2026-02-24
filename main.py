@@ -39,6 +39,14 @@ class App(ctk.CTk):
         self.current_frame = None
         self.show_frame(DashboardFrame, fade=False)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.report_callback_exception = self._handle_callback_exception
+
+    def _handle_callback_exception(self, exc_type, exc_val, exc_tb):
+        """Suppress KeyboardInterrupt in Tkinter callbacks; log everything else."""
+        if issubclass(exc_type, KeyboardInterrupt):
+            return
+        import traceback
+        traceback.print_exception(exc_type, exc_val, exc_tb)
 
     def _on_close(self):
         """Cancel all pending after() callbacks before destroying to suppress bgerror noise."""
